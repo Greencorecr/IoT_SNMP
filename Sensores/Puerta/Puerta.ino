@@ -1,8 +1,8 @@
 /*
- * Sensor de gotas de agua
+ * Sensor de puerta
  * Para ESP32 TTGOv2
  * por Greencore Solutions
- * Usa pin 34 en goteo1 en modo trigger
+ * Usa pin 34 en puerta1 en modo trigger
  * 
  * Debe definir NWKSKEY, APPSKEY, y DEVADDR
  */
@@ -61,14 +61,14 @@ struct Trigger {
     uint32_t numberKeyPresses;
     bool pressed;
 };
-Trigger goteo1 = {34, 0, false};
+Trigger puerta1 = {34, 0, false};
 
 void IRAM_ATTR isr() {
-    goteo1.numberKeyPresses += 1;
-    goteo1.pressed = true;
+    puerta1.numberKeyPresses += 1;
+    puerta1.pressed = true;
     u8x8.setCursor(0,5);
     u8x8.print("Triggers: ");
-    u8x8.print(goteo1.numberKeyPresses);
+    u8x8.print(puerta1.numberKeyPresses);
 }
 
 void(* resetFunc) (void) = 0; //declare reset function @ address 0
@@ -140,8 +140,8 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
-    mydata[1] = highByte(goteo1.numberKeyPresses);
-    mydata[2] = lowByte(goteo1.numberKeyPresses);
+    mydata[1] = highByte(puerta1.numberKeyPresses);
+    mydata[2] = lowByte(puerta1.numberKeyPresses);
     unsigned long currentMillis = millis();
 
 
@@ -165,8 +165,8 @@ void do_send(osjob_t* j){
 }
 
 void setup() {
-    pinMode(goteo1.PIN, INPUT_PULLUP);
-    attachInterrupt(goteo1.PIN, isr, FALLING);
+    pinMode(puerta1.PIN, INPUT_PULLUP);
+    attachInterrupt(puerta1.PIN, isr, FALLING);
     Serial.begin(115200);
     Serial.println(F("Starting"));
     u8x8.begin();
@@ -212,11 +212,11 @@ void setup() {
     // Set data rate and transmit power (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF7,14);
 
-    mydata[0] = 0x04;
-    mydata[1] = goteo1.numberKeyPresses;
+    mydata[0] = 0x16;
+    mydata[1] = puerta1.numberKeyPresses;
 
     u8x8.drawString(0, 0, "Greencore");
-    u8x8.drawString(0, 1, "Sensor gotas");
+    u8x8.drawString(0, 1, "Sensor puerta");
     u8x8.drawString(0, 2, "Freq ");
 
     // Start job
