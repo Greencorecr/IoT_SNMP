@@ -9,8 +9,6 @@ before_install:
   - source venv/bin/activate
 install:
   - pip install -r Conectores/SNMP/requirements.txt Conectores/MQTT/requirements.txt
-virtualenv:
-  system_site_packages: true
 script:
   - Conectores/SNMP/unittest.py
   - Conectores/MQTT/unittest.py
