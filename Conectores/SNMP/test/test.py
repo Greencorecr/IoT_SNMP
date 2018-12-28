@@ -16,3 +16,7 @@ class PruebaTiempo(unittest.TestCase):
         timeFail="2018-12-27 23:30:00.000000"
         result =  (timeFail - timedelta(minutes=5) == timeTTN)
         self.assertEqual(result, true)
+
+
+if __name__ == '__main__':
+    unittest.main()        
