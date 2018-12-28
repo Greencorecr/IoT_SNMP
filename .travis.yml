@@ -4,7 +4,8 @@ python:
   - "3.6"
 cache: pip
 install:
-  - pip install -r Conectores/SNMP/requirements.txt Conectores/MQTT/requirements.txt
+  - pip install -r Conectores/SNMP/requirements.txt
+  - pip install -r Conectores/MQTT/requirements.txt
 script:
   - Conectores/SNMP/unittest.py
   - Conectores/MQTT/unittest.py
