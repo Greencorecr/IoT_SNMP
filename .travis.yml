@@ -7,5 +7,5 @@ install:
   - pip install -r Conectores/SNMP/requirements.txt
   - pip install -r Conectores/MQTT/requirements.txt
 script:
-  - python3 Conectores/SNMP/test/test.py -v
+  - ( cd Conectores/SNMP/ && python3 -m unittest discover -v )
     #  - python3 Conectores/MQTT/unittest.py
