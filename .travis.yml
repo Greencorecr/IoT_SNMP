@@ -3,10 +3,6 @@ python:
   - "3.5"
   - "3.6"
 cache: pip
-before_install:
-  - pip install --user --upgrade pip virtualenv
-  - virtualenv -p python$PYTHON venv
-  - source venv/bin/activate
 install:
   - pip install -r Conectores/SNMP/requirements.txt Conectores/MQTT/requirements.txt
 script:
