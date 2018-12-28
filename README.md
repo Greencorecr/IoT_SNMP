@@ -11,8 +11,9 @@ Dependiendo del OID consultado, snmpd llama al conector que saca de la base de e
 
 ## Sensores
 
-![Case con TTGO](https://github.com/Greencorecr/TTN_SNMP/tree/master/img/Case+TTGO.jpg "Case con TTGO")
-![Case con PCB](https://github.com/Greencorecr/TTN_SNMP/tree/master/img/Case+PCB.jpg "Case con TTGO"))
+![Case con TTGO](https://github.com/Greencorecr/TTN_SNMP/raw/master/img/Case%2BTTGO.jpg "Case con TTGO")
+
+![Case con PCB](https://github.com/Greencorecr/TTN_SNMP/raw/master/img/Case+PCB.jpg "Case con TTGO")
 
 - [Sensor de Gotas](https://github.com/Greencorecr/TTN_SNMP/tree/master/Sensores/Gotas)
 - [Sensor de Puerta](https://github.com/Greencorecr/TTN_SNMP/tree/master/Sensores/Puerta)
