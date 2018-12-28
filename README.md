@@ -20,3 +20,26 @@ Dependiendo del OID consultado, snmpd llama al conector que saca de la base de e
 - [Sensor de caída eléctrica]()
 - [Sensor de consumo eléctrico]()
 - [Sensor de temperatura/humedad](https://github.com/Greencorecr/TTN_SNMP/tree/master/Sensores/TempHum)
+
+
+## Arduino IDE
+
+### Dependencias:
+
+- sudo python -m pip install pyserial
+
+### Librerías:
+- Instalar IBM LMIC framework by IBM Version 1.5.0+arduino-2
+
+  Se debe modificar el archivo Arduino/libraries/IBM_LMIC_framework/src/lmic/config.h, comentando la primera línea y descomentando la segunda:
+
+  //#define CFG_eu868 1
+  #define CFG_us915 1
+
+- Instalar DHT sensor library for ESPx by beegee_tokyo Version 1.0.9
+
+### Tarjetas/Boards
+
+- Incluir en File -> Preferences -> Additional Boards Manager URLs: http://arduino.esp8266.com/stable/package_esp8266com_index.json,http://static.dev.sifive.com/bsp/arduino/package_sifive_index.json,https://adafruit.github.io/arduino-board-index/package_adafruit_index.json,https://lowpowerlab.github.io/MoteinoCore/package_LowPowerLab_index.json,https://dl.espressif.com/dl/package_esp32_index.json 
+
+- Instalar esp32 by Espressif Systems 
