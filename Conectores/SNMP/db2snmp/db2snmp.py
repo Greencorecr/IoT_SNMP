@@ -5,7 +5,7 @@ from tinydb import TinyDB, Query
 db = TinyDB('../MQTT/sensores.json')
 Sensores = Query()
 
-search=db.get(Sensores.dev_id == 'ttgo-mapper')
+search=db.get(Sensores.dev_id == 'sensor-demo')
 
 def TTN2time(search):
     """
