@@ -22,16 +22,16 @@ int sensorValue = 0;        // value read from the pot
 // LoRaWAN NwkSKey, network session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const PROGMEM u1_t NWKSKEY[16] = { 0x5E, 0xCE, 0x6D, 0x44, 0x40, 0x4C, 0xD5, 0x29, 0x0F, 0xD9, 0x4E, 0x8F, 0xDF, 0x80, 0x20, 0x7C }; // Network Session Key, hex, MSB
+static const PROGMEM u1_t NWKSKEY[16] = { }; // Network Session Key, hex, MSB
 
 // LoRaWAN AppSKey, application session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const u1_t PROGMEM APPSKEY[16] = { 0xD2, 0x8E, 0xAC, 0x6D, 0x0D, 0x6E, 0x18, 0xE8, 0xE6, 0xE2, 0x5E, 0xA1, 0xCF, 0x49, 0x92, 0xFD }; // Application Sessoin Key, hex, MSB
+static const u1_t PROGMEM APPSKEY[16] = { }; // Application Sessoin Key, hex, MSB
 
 // LoRaWAN end-device address (DevAddr)
 // See http://thethingsnetwork.org/wiki/AddressSpace
-static const u4_t DEVADDR = 0x26051FD6 ; // Device Address, 0xDecimal, MSB
+static const u4_t DEVADDR = 0xfede2 ; // Device Address, 0xDecimal, MSB
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
