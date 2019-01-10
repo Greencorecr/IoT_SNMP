@@ -15,13 +15,13 @@ class PruebaConector(unittest.TestCase):
         Revisa la formula para verificar si han pasado 5 minutos desde 
         la última actualización
         """
-        db = TinyDB('../MQTT/test/sensores.json')
+        db = TinyDB('../../MQTT/test/sensores.json')
         Sensores = Query()
         search=db.get(Sensores.dev_id == 'sensor-demo')
+        db.close()
         timeTTN = TTN2time(search)
         timeFail=datetime.strptime("2018-12-27 23:35:00",  "%Y-%m-%d %H:%M:%S")
         result =  (timeFail - timedelta(minutes=5) == timeTTN)
-        db.close()
         self.assertTrue(result)
 
 
