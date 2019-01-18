@@ -49,13 +49,18 @@ check_info["sensor01_humedad"] = {
 }
 ```
 
-### 3. Agregar el host a monitorear (Raspberry Pi) con la correspondiente contraseña SNMP Community, con el fin de que comience a escanear servicios.
+### 3. Agregar el host a monitorear
 
-### 4. Una vez agregado el host, ejecutar el siguiente comando para validar el chequeo local, para lo cual es necesario convertirse en el usuario propietario del sitio a nivel de OMD, en el siguiente ejemplo se asume que el sitio de Check_MK se llama "pruebas" y el host "raspberry"
+Se debe agregar el host a monitorear (Raspberry Pi) con la correspondiente contraseña SNMP Community y sin monitoreo por agente, con el fin de que comience a escanear servicios a nivel de SNMP únicamente.
+
+### 4. Validar chequeo local
+Una vez agregado el host, ejecutar el siguiente comando para validar el chequeo local, para lo cual es necesario convertirse en el usuario propietario del sitio a nivel de OMD, en el siguiente ejemplo se asume que el sitio de Check_MK se llama "pruebas" y el host "raspberry"
 
 ``` 
 sudo su - pruebas
+```
 
+```
 OMD[pruebas]:~$ check_mk -v --checks sensor01_humedad -I raspberry
 
 Discovering services on: raspberry
