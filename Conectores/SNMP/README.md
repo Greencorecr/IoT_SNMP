@@ -33,22 +33,22 @@ Esto generará un OID especial: .1.3.6.1.4.1.8072.1.3.2.4.1.2.16.115.101.110.115
 - El resto del OID se conforma por:
   1. Cantidad de caracteres de la descripción del extend, en el ejemplo "sensor01-humedad" = 16 caracteres
   2. La representación decimal ASCI de cada uno de los caracteres, en el ejemplo "sensor01-humedad":
-       115 : ASCII decimal de 's'
-       101 : ASCII decimal de 'e'
-       110 : ASCII decimal de 'n'
-       115 : ASCII decimal de 's'
-       111 : ASCII decimal de 'o'
-       114 : ASCII decimal de 'r'
-       48  : ASCII decimal de '0'
-       49  : ASCII decimal de '1'
-       45  : ASCII decimal de '-'
-       104 : ASCII decimal de 'h'
-       117 : ASCII decimal de 'u'
-       109 : ASCII decimal de 'm'
-       101 : ASCII decimal de 'e'
-       100 : ASCII decimal de 'd'
-       97  : ASCII decimal de 'a'
-       100 : ASCII decimal de 'd'
+    - 115 : ASCII decimal de 's'
+    - 101 : ASCII decimal de 'e'
+    - 110 : ASCII decimal de 'n'
+    - 115 : ASCII decimal de 's'
+    - 111 : ASCII decimal de 'o'
+    - 114 : ASCII decimal de 'r'
+    - 48  : ASCII decimal de '0'
+    - 49  : ASCII decimal de '1'
+    - 45  : ASCII decimal de '-'
+    - 104 : ASCII decimal de 'h'
+    - 117 : ASCII decimal de 'u'
+    - 109 : ASCII decimal de 'm'
+    - 101 : ASCII decimal de 'e'
+    - 100 : ASCII decimal de 'd'
+    - 97  : ASCII decimal de 'a'
+    - 100 : ASCII decimal de 'd'
 
 
 Por lo cual desde el servidor de monitoreo se puede consultar vía SNMP para confirmar que los datos se leen correctamente, para esto hay 2 formas
