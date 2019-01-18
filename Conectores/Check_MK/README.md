@@ -26,7 +26,8 @@ def inventory_sensor01_humedad(info):
         tipo = line[0]
         valor = line[1]
         inventory.append((tipo, valor))
-   print inventory
+   # Debug, habilitarlo únicamente para validar el check local, ya que si se deja descomentado da un error cuando Check_MK Web escanea los servicios
+   #print inventory
    return inventory
 
 def check_sensor01_humedad(item, _no_params, info):
