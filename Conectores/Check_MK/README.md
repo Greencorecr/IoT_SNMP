@@ -8,6 +8,9 @@ El script de python ``db2snmp.py``, lee de una base de datos TinyDB la cual ha s
 
 ### 1. Haber realizado la configuración del conector SNMP, y que la consulta por snmpwalk retorne datos reales.
 
+TTN_SNMP/Conectores/SNMP/README.md
+
+
 ### 2. Crear un script de chequeo local:
 
 ```
