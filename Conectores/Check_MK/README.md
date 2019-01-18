@@ -15,7 +15,9 @@ TTN_SNMP/Conectores/SNMP/README.md
 
 ```
 sudo vim /opt/omd/sites/pruebas/local/share/check_mk/checks/sensor01_humedad
+```
 
+```
 #!/usr/bin/python
 
 def inventory_sensor01_humedad(info):
