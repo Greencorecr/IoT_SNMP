@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+def inventory_sensor05_caida(info):
+   inventory = []
+   for line in info:
+   	tipo = line[0]
+        valor = line[1]
+	inventory.append((tipo, valor))
+   #print inventory
+   return inventory
+
+def check_sensor05_caida(item, _no_params, info):
+   for line in info:
+        tipo = line[0]
+        valor = line[1]
+	# OK cuando estado es 0 (si hay luz)
+        if tipo == "caida" and valor == "0":
+	   infotext = "Si hay electricidad, caida: " + valor
+	   return 0, infotext, [ ("caida", valor) ]
+	# WARNING cuando estado es 1 (no hay luz)
+	elif tipo == "caida" and valor == "1":
+	   infotext = "No hay electricidad, caida: " + valor
+           return 1, infotext, [ ("caida", valor) ]
+	# CRITICAL cuando estado es 2 (no se recibe informacion)
+	else:
+	   infotext = "No se esta recibiendo informacion, caida: " + valor
+	   return 2, infotext, [ ("caida", valor) ]
+
+check_info["sensor05_caida"] = {
+    "check_function"        : check_sensor05_caida,
+    "inventory_function"    : inventory_sensor05_caida,
+    "service_description"   : "Sensor",
+    "snmp_info"             : ( ".1.3.6.1.4.1.8072.1.3.2.4.1.2.14.115.101.110.115.111.114.48.53.45.99.97.105.100.97", [ "1", "2" ] ) ,
+    "has_perfdata"	    : True,
+}

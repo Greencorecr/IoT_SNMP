@@ -1,0 +1,38 @@
+#!/usr/bin/python
+
+def inventory_sensor01_humedad(info):
+   inventory = []
+   for line in info:
+   	tipo = line[0]
+        valor = line[1]
+	inventory.append((tipo, valor))
+   #print inventory
+   return inventory
+
+def check_sensor01_humedad(item, _no_params, info):
+   for line in info:
+        tipo = line[0]
+        valor = line[1]
+
+        # OK cuando este entre 40%y 65%
+        if tipo == "humedad" and valor != "0" and valor != "12336" and valor >= "40" and valor <= "65" :
+           infotext = "humedad actual: " + valor
+           return 0, infotext, [ ("humedad", valor) ]
+
+        # WARNING cuando valor entre 35%-40% o 65%-70% de humedad relativa
+        elif tipo == "humedad" and ((valor >= "35" and valor < "40") or (valor > "65" and valor <= "75")):
+           infotext = "humedad actual: " + valor
+           return 1, infotext, [ ("humedad", valor) ]
+
+        # CRITICAL cuando la humedad sea muy baja/alta o no se reciben datos
+        else:
+           infotext = "humedad actual: " + valor
+           return 2, infotext, [ ("humedad", valor) ]
+
+check_info["sensor01_humedad"] = {
+    "check_function"        : check_sensor01_humedad,
+    "inventory_function"    : inventory_sensor01_humedad,
+    "service_description"   : "Sensor",
+    "snmp_info"             : ( ".1.3.6.1.4.1.8072.1.3.2.4.1.2.16.115.101.110.115.111.114.48.49.45.104.117.109.101.100.97.100", [ "1", "2" ] ) ,
+    "has_perfdata"	    : True,
+}

@@ -1,0 +1,36 @@
+#!/usr/bin/python
+
+def inventory_sensor02_puerta(info):
+   inventory = []
+   for line in info:
+   	tipo = line[0]
+        valor = line[1]
+	inventory.append((tipo, valor))
+   #print inventory
+   return inventory
+
+def check_sensor02_puerta(item, _no_params, info):
+   for line in info:
+        tipo = line[0]
+        valor = line[1]
+ 
+	# OK cuando estado es 0 (cerrado)
+        if tipo == "puerta" and valor == "0":
+	   infotext = "Puerta cerrada, estado: " + valor
+	   return 0, infotext, [ ("estado", valor) ]
+	# WARNING cuando estado es 1 (abierto)
+	elif tipo == "puerta" and valor == "1":
+           infotext = "Puerta abierta, estado: " + valor
+           return 1, infotext, [ ("estado", valor) ]
+	# CRITICAL cuando estado es 2 (no se reciben datos)
+	else:
+	   infotext = "No se esta recibiendo informacion, estado: " + valor
+	   return 2, infotext, [ ("estado", valor) ]
+
+check_info["sensor02_puerta"] = {
+    "check_function"        : check_sensor02_puerta,
+    "inventory_function"    : inventory_sensor02_puerta,
+    "service_description"   : "Sensor",
+    "snmp_info"             : ( ".1.3.6.1.4.1.8072.1.3.2.4.1.2.15.115.101.110.115.111.114.48.50.45.112.117.101.114.116.97", [ "1", "2" ] ) ,
+    "has_perfdata"	    : True,
+}
