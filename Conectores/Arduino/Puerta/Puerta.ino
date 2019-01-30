@@ -6,27 +6,61 @@
  * 
  * Debe definir NWKSKEY, APPSKEY, y DEVADDR
  */
-
-
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
 #include <Wire.h>
-#include <U8x8lib.h>
+//#include <U8x8lib.h>
+#include<U8g2lib.h>
+
+// Imagen de GreenCore 50x50 px
+#define greenfoot_width 50
+#define greenfoot_height 50
+static const unsigned char greenfoot_bits[] PROGMEM = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc, 0xff, 0xff, 0xff, 0xff,
+   0xff, 0x00, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0xff, 0xff, 0xff,
+   0xff, 0xff, 0xff, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff,
+   0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+   0x03, 0xff, 0xff, 0xff, 0x7f, 0xf0, 0xff, 0x03, 0xff, 0xc0, 0xff, 0x3f,
+   0xe0, 0xff, 0x03, 0x7f, 0xc0, 0xff, 0x1f, 0xc0, 0xff, 0x03, 0x3f, 0x80,
+   0xff, 0x0f, 0xc0, 0xff, 0x03, 0x3f, 0x80, 0xff, 0x0f, 0xc0, 0xff, 0x03,
+   0x3f, 0x80, 0xff, 0x0f, 0xc0, 0xff, 0x03, 0x3f, 0x00, 0xff, 0x0f, 0xc0,
+   0xff, 0x03, 0x3f, 0x80, 0xff, 0x0f, 0xc0, 0xff, 0x03, 0x7f, 0x80, 0xff,
+   0x07, 0xc0, 0xff, 0x03, 0x7f, 0xc0, 0xff, 0x07, 0xe0, 0xff, 0x03, 0x7f,
+   0xe0, 0xff, 0x03, 0xf8, 0xff, 0x03, 0xff, 0xe1, 0xff, 0x81, 0xff, 0xff,
+   0x03, 0xff, 0xf1, 0xff, 0xc0, 0xff, 0xff, 0x03, 0xff, 0xf3, 0x7f, 0xe0,
+   0xff, 0xff, 0x03, 0xff, 0xe3, 0x7f, 0xf0, 0xff, 0xff, 0x03, 0xff, 0xe3,
+   0x3f, 0xf8, 0xff, 0xff, 0x03, 0xff, 0xe7, 0x1f, 0xfc, 0xff, 0xff, 0x03,
+   0xff, 0xc7, 0x0f, 0xfe, 0xff, 0xff, 0x03, 0xff, 0xc7, 0x07, 0xff, 0xff,
+   0xff, 0x03, 0xff, 0x87, 0x83, 0xff, 0xff, 0xff, 0x03, 0xff, 0x07, 0xc0,
+   0xff, 0xff, 0xff, 0x03, 0xff, 0x07, 0xc0, 0xff, 0xff, 0xff, 0x03, 0xff,
+   0x07, 0xe0, 0xff, 0x1f, 0xfc, 0x03, 0xff, 0x07, 0xe0, 0xff, 0x07, 0xf8,
+   0x03, 0xff, 0x03, 0xf0, 0xff, 0x07, 0xf0, 0x03, 0xff, 0x03, 0xf0, 0xff,
+   0x03, 0xf0, 0x03, 0xff, 0x01, 0xf0, 0xff, 0x01, 0xf0, 0x03, 0xff, 0x00,
+   0xe0, 0xff, 0x00, 0xf0, 0x03, 0xff, 0x00, 0x80, 0x1f, 0x00, 0xf0, 0x03,
+   0x7f, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x03, 0x3f, 0x00, 0x00, 0x00, 0x00,
+   0xf8, 0x03, 0x1f, 0x00, 0x00, 0xe0, 0x0f, 0xfc, 0x03, 0x0f, 0x00, 0x00,
+   0xfe, 0x1f, 0xfe, 0x03, 0x07, 0x00, 0xe0, 0xff, 0xff, 0xff, 0x03, 0x03,
+   0x00, 0xf8, 0xff, 0xff, 0xff, 0x03, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff,
+   0x03, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xc0, 0xff, 0xff,
+   0xff, 0xff, 0x03, 0x00, 0xe0, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xf0,
+   0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xf8, 0xff, 0xff, 0xff, 0xff, 0x01,
+   0x00, 0xf8, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0xfc, 0xff, 0xff, 0xff,
+   0xff, 0x00 };
 
 // LoRaWAN NwkSKey, network session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const PROGMEM u1_t NWKSKEY[16] = {  }; // Network Session Key, hex, MSB
+static const PROGMEM u1_t NWKSKEY[16] = { 0x3F, 0x3D, 0x30, 0x50, 0x87, 0xE5, 0x01, 0xD5, 0x0E, 0x18, 0x60, 0x9C, 0x30, 0x36, 0xC5, 0xF9 }; // Network Session Key, hex, MSB
 
 // LoRaWAN AppSKey, application session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const u1_t PROGMEM APPSKEY[16] = {  }; // Application Sessoin Key, hex, MSB
+static const u1_t PROGMEM APPSKEY[16] = { 0x8A, 0x3A, 0xA7, 0xDF, 0x75, 0x02, 0xFB, 0x70, 0xDC, 0x8F, 0xCF, 0x11, 0x62, 0xF8, 0xAD, 0x07 }; // Application Sessoin Key, hex, MSB
 
 // LoRaWAN end-device address (DevAddr)
 // See http://thethingsnetwork.org/wiki/AddressSpace
-static const u4_t DEVADDR = 0xfede2 ; // Device Address, 0xDecimal, MSB
+static const u4_t DEVADDR = 0x26051BD5 ; // Device Address, 0xDecimal, MSB
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -35,12 +69,14 @@ void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
 
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
+
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
 unsigned int paqCont = 0;
-uint8_t mydata[] = "000";
+uint8_t mydata[] = "00000";
 
 static osjob_t sendjob;
 
@@ -61,14 +97,13 @@ struct Trigger {
     uint32_t numberKeyPresses;
     bool pressed;
 };
+
+
 Trigger puerta1 = {34, 0, false};
 
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
     puerta1.pressed = true;
-    u8x8.setCursor(0,5);
-    u8x8.print("Triggers: ");
-    u8x8.print(puerta1.numberKeyPresses);
 }
 
 void(* resetFunc) (void) = 0; //declare reset function @ address 0
@@ -107,7 +142,9 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-//            u8x8.drawString(0, 5, "Paquete enviado");
+            Serial.println("Paquete enviado");
+            Serial.print("numberKeyPresses: ");
+            Serial.print(puerta1.numberKeyPresses);
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
@@ -140,8 +177,20 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
-    mydata[1] = highByte(puerta1.numberKeyPresses);
-    mydata[2] = lowByte(puerta1.numberKeyPresses);
+    // LOGO
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawXBMP(39,0,50,50,greenfoot_bits);
+    u8g2.drawStr(5,64,"GreenCore Solutions");
+    u8g2.sendBuffer();
+    delay(5000); // muestra el logo por 5 segundos
+  
+    mydata[1] = ( puerta1.numberKeyPresses >> 24 ) & 0xFF;
+    mydata[2] = ( puerta1.numberKeyPresses >> 16 ) & 0xFF;
+    mydata[3] = ( puerta1.numberKeyPresses >> 8 ) & 0xFF;
+    mydata[4] = puerta1.numberKeyPresses & 0xFF;
+    
     unsigned long currentMillis = millis();
 
 
@@ -154,14 +203,39 @@ void do_send(osjob_t* j){
         }
     Serial.println(F("Packet queued"));
     Serial.println(LMIC.freq);
-    u8x8.setCursor(5,2);
-    u8x8.print(LMIC.freq/1000000.0);
-    u8x8.print(" Mhz");
-    u8x8.setCursor(0,4);
-    u8x8.print("Paquete ");
-    u8x8.print(paqCont);
-    paqCont++;
-    delay(120000);
+
+    // INFORMACIÓN GENERAL
+    char frecString[10]; 
+    dtostrf(LMIC.freq/1000000.0,3,2,frecString);
+    char paqString02[10]; 
+    dtostrf(paqCont,2,0,paqString02);
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(0, 10, "Sensor Puerta");
+    u8g2.drawStr(0, 30, "Frecuencia: ");
+    u8g2.drawStr(68,30,frecString);
+    u8g2.drawStr(100,30," Mhz");
+    u8g2.drawStr(0,50,"Paquete: ");
+    u8g2.drawStr(50,50,paqString02);
+    u8g2.sendBuffer();
+    delay(3000);
+
+    // Activaciones - Triggers
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB10_tr);
+    u8g2.drawStr(15, 10, "Activaciones ");
+    char actString[10]; 
+    dtostrf(puerta1.numberKeyPresses,9,0,actString);
+    u8g2.drawStr(25, 40,actString);
+    u8g2.sendBuffer();    
+
+
+
+    
+    paqCont++;   
+
 }
 
 void setup() {
@@ -169,8 +243,8 @@ void setup() {
     attachInterrupt(puerta1.PIN, isr, FALLING);
     Serial.begin(115200);
     Serial.println(F("Starting"));
-    u8x8.begin();
-    u8x8.setFont(u8x8_font_chroma48medium8_r);
+    u8g2.begin();
+//    u8g2.setFont(u8x8_font_chroma48medium8_r);
     #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
@@ -212,12 +286,13 @@ void setup() {
     // Set data rate and transmit power (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF7,14);
 
+    // código sensor
     mydata[0] = 0x16;
-    mydata[1] = puerta1.numberKeyPresses;
+    //mydata[1] = puerta1.numberKeyPresses;
 
-    u8x8.drawString(0, 0, "Greencore");
-    u8x8.drawString(0, 1, "Sensor puerta");
-    u8x8.drawString(0, 2, "Freq ");
+    //u8x8.drawString(0, 0, "Greencore");
+    //u8x8.drawString(0, 1, "Sensor puerta");
+    //u8x8.drawString(0, 2, "Freq ");
 
     // Start job
     do_send(&sendjob);

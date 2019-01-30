@@ -14,21 +14,60 @@
 #include <Wire.h>
 #include "DHTesp.h"
 #include "Ticker.h"
-#include <U8x8lib.h>
+#include<U8g2lib.h>
+#include<Arduino.h>
+
+
+// Imagen de GreenCore 50x50 px
+#define greenfoot_width 50
+#define greenfoot_height 50
+static const unsigned char greenfoot_bits[] PROGMEM = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfc, 0xff, 0xff, 0xff, 0xff,
+   0xff, 0x00, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0xff, 0xff, 0xff,
+   0xff, 0xff, 0xff, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff,
+   0xff, 0xff, 0xff, 0xff, 0xff, 0x03, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+   0x03, 0xff, 0xff, 0xff, 0x7f, 0xf0, 0xff, 0x03, 0xff, 0xc0, 0xff, 0x3f,
+   0xe0, 0xff, 0x03, 0x7f, 0xc0, 0xff, 0x1f, 0xc0, 0xff, 0x03, 0x3f, 0x80,
+   0xff, 0x0f, 0xc0, 0xff, 0x03, 0x3f, 0x80, 0xff, 0x0f, 0xc0, 0xff, 0x03,
+   0x3f, 0x80, 0xff, 0x0f, 0xc0, 0xff, 0x03, 0x3f, 0x00, 0xff, 0x0f, 0xc0,
+   0xff, 0x03, 0x3f, 0x80, 0xff, 0x0f, 0xc0, 0xff, 0x03, 0x7f, 0x80, 0xff,
+   0x07, 0xc0, 0xff, 0x03, 0x7f, 0xc0, 0xff, 0x07, 0xe0, 0xff, 0x03, 0x7f,
+   0xe0, 0xff, 0x03, 0xf8, 0xff, 0x03, 0xff, 0xe1, 0xff, 0x81, 0xff, 0xff,
+   0x03, 0xff, 0xf1, 0xff, 0xc0, 0xff, 0xff, 0x03, 0xff, 0xf3, 0x7f, 0xe0,
+   0xff, 0xff, 0x03, 0xff, 0xe3, 0x7f, 0xf0, 0xff, 0xff, 0x03, 0xff, 0xe3,
+   0x3f, 0xf8, 0xff, 0xff, 0x03, 0xff, 0xe7, 0x1f, 0xfc, 0xff, 0xff, 0x03,
+   0xff, 0xc7, 0x0f, 0xfe, 0xff, 0xff, 0x03, 0xff, 0xc7, 0x07, 0xff, 0xff,
+   0xff, 0x03, 0xff, 0x87, 0x83, 0xff, 0xff, 0xff, 0x03, 0xff, 0x07, 0xc0,
+   0xff, 0xff, 0xff, 0x03, 0xff, 0x07, 0xc0, 0xff, 0xff, 0xff, 0x03, 0xff,
+   0x07, 0xe0, 0xff, 0x1f, 0xfc, 0x03, 0xff, 0x07, 0xe0, 0xff, 0x07, 0xf8,
+   0x03, 0xff, 0x03, 0xf0, 0xff, 0x07, 0xf0, 0x03, 0xff, 0x03, 0xf0, 0xff,
+   0x03, 0xf0, 0x03, 0xff, 0x01, 0xf0, 0xff, 0x01, 0xf0, 0x03, 0xff, 0x00,
+   0xe0, 0xff, 0x00, 0xf0, 0x03, 0xff, 0x00, 0x80, 0x1f, 0x00, 0xf0, 0x03,
+   0x7f, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x03, 0x3f, 0x00, 0x00, 0x00, 0x00,
+   0xf8, 0x03, 0x1f, 0x00, 0x00, 0xe0, 0x0f, 0xfc, 0x03, 0x0f, 0x00, 0x00,
+   0xfe, 0x1f, 0xfe, 0x03, 0x07, 0x00, 0xe0, 0xff, 0xff, 0xff, 0x03, 0x03,
+   0x00, 0xf8, 0xff, 0xff, 0xff, 0x03, 0x01, 0x00, 0xfe, 0xff, 0xff, 0xff,
+   0x03, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xc0, 0xff, 0xff,
+   0xff, 0xff, 0x03, 0x00, 0xe0, 0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xf0,
+   0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xf8, 0xff, 0xff, 0xff, 0xff, 0x01,
+   0x00, 0xf8, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0xfc, 0xff, 0xff, 0xff,
+   0xff, 0x00 };
 
 // LoRaWAN NwkSKey, network session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const PROGMEM u1_t NWKSKEY[16] = {  }; // Network Session Key, hex, MSB
+static const PROGMEM u1_t NWKSKEY[16] = { 0x6E, 0xF2, 0x36, 0x2D, 0x52, 0xD5, 0xC1, 0x40, 0x3C, 0x77, 0x7D, 0x5D, 0x6A, 0x19, 0x36, 0x17 }; // Network Session Key, hex, MSB
+//static const PROGMEM u1_t NWKSKEY[16] = { }; // Network Session Key, hex, MSB
 
 // LoRaWAN AppSKey, application session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const u1_t PROGMEM APPSKEY[16] = {  }; // Application Sessoin Key, hex, MSB
+static const u1_t PROGMEM APPSKEY[16] = { 0x09, 0x4B, 0xD1, 0xE2, 0xA7, 0xF4, 0x3A, 0xF7, 0xD3, 0xC1, 0xED, 0x61, 0x14, 0xCA, 0xCB, 0x79 }; // Application Sessoin Key, hex, MSB
+//static const u1_t PROGMEM APPSKEY[16] = { }; // Application Sessoin Key, hex, MSB
 
 // LoRaWAN end-device address (DevAddr)
 // See http://thethingsnetwork.org/wiki/AddressSpace
-static const u4_t DEVADDR = 0xfede2 ; // Device Address, 0xDecimal, MSB
+static const u4_t DEVADDR = 0x2605124C ; // Device Address, 0xDecimal, MSB
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -37,7 +76,7 @@ void os_getArtEui (u1_t* buf) { }
 void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
 
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -82,8 +121,8 @@ bool initTemp() {
     Serial.println("Failed to start task for temperature update");
     return false;
   } else {
-    // Start update of environment data every 20 seconds
-    tempTicker.attach(20, triggerGetTemp);
+    // Start update of environment data every 10 seconds
+    tempTicker.attach(10, triggerGetTemp);
   }
   return true;
 }
@@ -118,12 +157,18 @@ bool getTemperature() {
   }
 
   Serial.println(" T:" + String(newValues.temperature) + " H:" + String(newValues.humidity));
-  u8x8.setCursor(0,5);
-  u8x8.print("Temp: ");
-  u8x8.print((int) newValues.temperature);
-  u8x8.setCursor(0,6);
-  u8x8.print("Hum: ");
-  u8x8.print((int) newValues.humidity);
+  
+  // DATOS DEL SENSOR
+  u8g2.clearBuffer();
+  u8g2.clearDisplay();
+  u8g2.setFont(u8g2_font_ncenB24_tr);
+  char tempString[3];
+  char humString[3];
+  dtostrf(newValues.temperature,3,0,tempString);
+  dtostrf(newValues.humidity,3,0,humString);
+  u8g2.drawStr(5,44,tempString);
+  u8g2.drawStr(69,44,humString);
+  u8g2.sendBuffer();
 
   mydata[1] = highByte((int) newValues.temperature);
   mydata[2] = lowByte((int) newValues.temperature);
@@ -131,6 +176,7 @@ bool getTemperature() {
   mydata[4] = lowByte((int) newValues.humidity);
 
   return true;
+  delay(5000);
 }
 
 static osjob_t sendjob;
@@ -216,10 +262,17 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
+    // LOGO
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawXBMP(39,0,50,50,greenfoot_bits);
+    u8g2.drawStr(5,64,"GreenCore Solutions");
+    u8g2.sendBuffer();
+    delay(5000); // muestra el logo por 5 segundos  
 
     unsigned long currentMillis = millis();
-
-
+    
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
@@ -229,24 +282,34 @@ void do_send(osjob_t* j){
         }
     Serial.println(F("Packet queued"));
     Serial.println(LMIC.freq);
-    u8x8.setCursor(5,2);
-    u8x8.print(LMIC.freq/1000000.0);
-    u8x8.print(" Mhz");
-    u8x8.setCursor(0,4);
-    u8x8.print("Paquete ");
-    u8x8.print(paqCont);
+
+ // INFORMACIÓN GENERAL
+    char frecString[10]; 
+    dtostrf(LMIC.freq/1000000.0,3,2,frecString);
+    char paqString02[10]; 
+    dtostrf(paqCont,2,0,paqString02);
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawStr(0, 10, "Temperatura-Humedad");
+    u8g2.drawStr(0, 30, "Frecuencia: ");
+    u8g2.drawStr(68,30,frecString);
+    u8g2.drawStr(100,30," Mhz");
+    u8g2.drawStr(0,50,"Paquete: ");
+    u8g2.drawStr(50,50,paqString02);
+    u8g2.sendBuffer();
+    delay(3000);
     paqCont++;
-    delay(120000);
+
 }
 
 void setup() {
-  initTemp();
-  // Signal end of setup() to tasks
-  tasksEnabled = true;
+    initTemp();
+    // Signal end of setup() to tasks
+    tasksEnabled = true;
     Serial.begin(115200);
     Serial.println(F("Starting"));
-    u8x8.begin();
-    u8x8.setFont(u8x8_font_chroma48medium8_r);
+    u8g2.begin();
     #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
@@ -288,11 +351,8 @@ void setup() {
     // Set data rate and transmit power (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF7,14);
 
+    // tipo de sensor
     mydata[0] = 0x08;
-
-    u8x8.drawString(0, 0, "Greencore");
-    u8x8.drawString(0, 1, "Sensor T+H");
-    u8x8.drawString(0, 2, "Freq ");
 
     // Start job
     do_send(&sendjob);
@@ -300,14 +360,13 @@ void setup() {
 
 void loop() {
   if (!tasksEnabled) {
-    // Wait 2 seconds to let system settle down
-    delay(2000);
+    // Wait 15 seconds to let system settle down
+    delay(15000);
     // Enable task that will read values from the DHT sensor
     tasksEnabled = true;
     if (tempTaskHandle != NULL) {
       vTaskResume(tempTaskHandle);
     }
   }
-  //yield();
   os_runloop_once();
 }
