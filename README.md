@@ -26,7 +26,13 @@ Dependiendo del OID consultado, snmpd llama al conector que saca de la base de e
 
 ### Dependencias:
 
-- sudo python -m pip install pyserial
+- Paquetes necesarios para Ubuntu
+
+```
+sudo apt update
+sudo apt install -y python2 python2-pip
+sudo python2 -m pip install pyserial
+```
 
 ### Librerías:
 - Instalar IBM LMIC framework by IBM Version 1.5.0+arduino-2
