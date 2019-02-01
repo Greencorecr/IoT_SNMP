@@ -56,18 +56,16 @@ static const unsigned char greenfoot_bits[] PROGMEM = {
 // LoRaWAN NwkSKey, network session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const PROGMEM u1_t NWKSKEY[16] = { 0x6E, 0xF2, 0x36, 0x2D, 0x52, 0xD5, 0xC1, 0x40, 0x3C, 0x77, 0x7D, 0x5D, 0x6A, 0x19, 0x36, 0x17 }; // Network Session Key, hex, MSB
-//static const PROGMEM u1_t NWKSKEY[16] = { }; // Network Session Key, hex, MSB
+static const PROGMEM u1_t NWKSKEY[16] = { }; // Network Session Key, hex, MSB
 
 // LoRaWAN AppSKey, application session key
 // This is the default Semtech key, which is used by the prototype TTN
 // network initially.
-static const u1_t PROGMEM APPSKEY[16] = { 0x09, 0x4B, 0xD1, 0xE2, 0xA7, 0xF4, 0x3A, 0xF7, 0xD3, 0xC1, 0xED, 0x61, 0x14, 0xCA, 0xCB, 0x79 }; // Application Sessoin Key, hex, MSB
-//static const u1_t PROGMEM APPSKEY[16] = { }; // Application Sessoin Key, hex, MSB
+static const u1_t PROGMEM APPSKEY[16] = { }; // Application Sessoin Key, hex, MSB
 
 // LoRaWAN end-device address (DevAddr)
 // See http://thethingsnetwork.org/wiki/AddressSpace
-static const u4_t DEVADDR = 0x2605124C ; // Device Address, 0xDecimal, MSB
+static const u4_t DEVADDR = 0xfede2 ; // Device Address, 0xDecimal, MSB
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
