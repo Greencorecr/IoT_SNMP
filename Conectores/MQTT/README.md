@@ -12,3 +12,50 @@ python3 -m "venv" venv
 venv/bin/pip3 install -r requirements.txt
 venv/bin/python3 ttn2db.py
 ```
+
+## Configuración de servicio a nivel de Systemd
+
+1. Crear script de systemd:
+
+    vim /etc/systemd/system/ttn2db.service
+
+    ```
+    [Unit]
+    Description= loads data from TTN and save it in a local tinydb file in json format
+    After=syslog.target
+
+    [Service]
+    Type=simple
+    User=root
+    Group=root
+    Environment="PYTHONUNBUFFERED=1"
+    ExecStart=/opt/venv/bin/python3 /opt/MQTT/ttn2db.py
+    StandardOutput=syslog
+    StandardError=syslog
+    SyslogIdentifier=ttn2db
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+2. Aplicar los cambios:
+
+    sudo systemctl daemon-reload
+    sudo systemctl start ttn2db
+
+
+3. Para crear un archivo de log personalizado:
+
+    - Crear el archivo /etc/rsyslog.d/ttn2db.conf:
+
+        ```
+        if $programname == 'ttn2db' then /var/log/ttn2db.log
+
+        ```
+    - Reiniciar el servicio para aplicar cambios:
+        sudo systemctl restart rsyslog.service
+
+    - Confirmar el correcto funcionamiento visualizando el log:
+        sudo tail -f /var/log/ttn2db.log
+
