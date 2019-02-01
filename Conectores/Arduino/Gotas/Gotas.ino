@@ -125,23 +125,37 @@ void muestraDatos(){
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB10_tr);
     u8g2.drawStr(15, 10, "Activaciones ");
+
     
+
     // Activaciones - Triggers
     // Se envía paquete cada 30 segundos, por lo cual durante 20 segundos se reimprime el valor de puerta1.numberKeyPresses
     // para visualizar en pantalla cuando se abre
     while (contador != 20){
+      u8g2.setFont(u8g2_font_ncenB10_tr);
       Serial.println(contador);
       dtostrf(goteo1.numberKeyPresses,9,0,actString);
 
       // Dibuja cuadro del color del fondo para ocultar dato anterior 
       u8g2.setDrawColor(0);
-      u8g2.drawBox(0,25,164,20);
+      u8g2.drawBox(0,25,164,40);
       u8g2.sendBuffer(); 
 
       // Activa nuevamente color default (blanco)
       u8g2.setDrawColor(1);
       u8g2.drawStr(25, 40,actString);
       u8g2.sendBuffer(); 
+
+      u8g2.setFont(u8g2_font_ncenB08_tr);
+      // No se han detecado gotas
+      if (goteo1.numberKeyPresses ==0){
+        u8g2.drawStr(20, 60,"OK no hay gotas");
+        u8g2.sendBuffer();      
+      }
+      else {
+        u8g2.drawStr(0, 60,"WARN gotas detectadas");
+        u8g2.sendBuffer();
+      }
       delay(1000);  
       contador++;
     }
