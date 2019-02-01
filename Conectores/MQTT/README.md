@@ -43,6 +43,7 @@ venv/bin/python3 ttn2db.py
 
     ```
     sudo systemctl daemon-reload
+    sudo systemctl enable ttn2db
     sudo systemctl start ttn2db
     ```
 
