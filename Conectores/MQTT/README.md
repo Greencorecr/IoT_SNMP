@@ -41,9 +41,10 @@ venv/bin/python3 ttn2db.py
 
 2. Aplicar los cambios:
 
+    ```
     sudo systemctl daemon-reload
     sudo systemctl start ttn2db
-
+    ```
 
 3. Para crear un archivo de log personalizado:
 
@@ -54,7 +55,9 @@ venv/bin/python3 ttn2db.py
 
         ```
     - Reiniciar el servicio para aplicar cambios:
+        ``` 
         sudo systemctl restart rsyslog.service
+        ```
 
     - Confirmar el correcto funcionamiento visualizando el log:
         sudo tail -f /var/log/ttn2db.log
