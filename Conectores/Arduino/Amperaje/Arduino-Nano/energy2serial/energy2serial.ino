@@ -28,5 +28,5 @@ void loop()
   Serial.print(Irms3);
   Serial.print(":");
   Serial.println(Irms4);
-  delay(60000);
+  delay(200000);
 }
