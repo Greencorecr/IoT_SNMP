@@ -77,7 +77,7 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 unsigned long previousMillis = 0;
 const long interval = 300000;
 unsigned int paqCont = 0;
-uint8_t mydata[] = "00000";
+uint8_t mydata[] = "00000000000000000";
 
 // Para lectura de Serial2
 String inputString = "";      // a String to hold incoming data
@@ -87,7 +87,7 @@ static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 60;
+const unsigned TX_INTERVAL = 240;
 
 // Pin mapping
 const lmic_pinmap lmic_pins = {
@@ -204,10 +204,40 @@ void do_send(osjob_t* j){
       }
     } 
 
-    mydata[1] = sensorData[0].toInt();
-    mydata[2] = sensorData[1].toInt();
-    mydata[3] = sensorData[2].toInt();
-    mydata[4] = sensorData[3].toInt();
+    // Creando paquete para sensor0-3
+    int tempInteger = sensorData[0].toInt();
+    mydata[1] = highByte(tempInteger);
+    mydata[2] = lowByte(tempInteger);
+    float tempFloat = (sensorData[0].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[3] = highByte(tempInteger);
+    mydata[4] = lowByte(tempInteger);
+
+    tempInteger = sensorData[1].toInt();
+    mydata[5] = highByte(tempInteger);
+    mydata[6] = lowByte(tempInteger);
+    tempFloat = (sensorData[1].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[7] = highByte(tempInteger);
+    mydata[8] = lowByte(tempInteger);
+
+    tempInteger = sensorData[2].toInt();
+    mydata[9] = highByte(tempInteger);
+    mydata[10] = lowByte(tempInteger);
+    tempFloat = (sensorData[2].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[11] = highByte(tempInteger);
+    mydata[12] = lowByte(tempInteger);
+
+    tempInteger = sensorData[3].toInt();
+    mydata[13] = highByte(tempInteger);
+    mydata[14] = lowByte(tempInteger);
+    tempFloat = (sensorData[3].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[15] = highByte(tempInteger);
+    mydata[16] = lowByte(tempInteger);
+
+
 
     unsigned long currentMillis = millis();
     
@@ -235,31 +265,24 @@ void do_send(osjob_t* j){
     u8g2.drawStr(100,20," MHz");
     u8g2.drawStr(0,30,"Paquete: ");
     u8g2.drawStr(50,30,paqString02);
-// TODO
 
-/*    
-    char sensorData0[3];
-    dtostrf(String(sensorData[0]),3,0,sensorData0);
-    char sensorData1[10];
-    dtostrf(sensorData[1],3,0,sensorData1);
-    char sensorData2[10];
-    dtostrf(sensorData[2],3,0,sensorData2);
-    char sensorData3[10];
-    dtostrf(sensorData[3],3,0,sensorData3);
-    */
     u8g2.drawStr(0,40,"s1: ");
     u8g2.drawStr(60,40,"s2: ");
     u8g2.drawStr(0,50,"s3: ");
     u8g2.drawStr(60,50,"s4: ");
 
-//char sensorData0[3];
-//sensorData0 = String(sensorData[0]);
-//    u8g2.drawStr(10,40,sensorData0);
-//    u8g2.drawStr(10,40,sensorData[0]);
-//    u8g2.drawStr(60,40,sensorData[1]);
-//    u8g2.drawStr(10,50,sensorData[2]);
-//    u8g2.drawStr(60,50,sensorData[3]);
-
+    char sensorData0[5];
+    char sensorData1[5];
+    char sensorData2[5];
+    char sensorData3[5];
+    sensorData[0].toCharArray(sensorData0, 5);
+    sensorData[1].toCharArray(sensorData1, 5);
+    sensorData[2].toCharArray(sensorData2, 5);
+    sensorData[3].toCharArray(sensorData3, 5);
+    u8g2.drawStr(30,40,sensorData0);
+    u8g2.drawStr(90,40,sensorData1);
+    u8g2.drawStr(30,50,sensorData2);
+    u8g2.drawStr(90,50,sensorData3);
 
     u8g2.sendBuffer();
     delay(3000);
