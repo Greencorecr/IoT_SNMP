@@ -5,10 +5,10 @@ function Decoder(bytes, port) {
   switch (bytes[0]) {
     case 0x01:
       decoded.tipo = "amps";
-      decoded.amp1 = bytes[1];
-      decoded.amp2 = bytes[2];
-      decoded.amp3 = bytes[3];
-      decoded.amp4 = bytes[4];
+      decoded.amp1 = ((bytes[1] << 8) + bytes[2]) + (((bytes[3] << 8) + bytes[4]) / 100);
+      decoded.amp2 = ((bytes[5] << 8) + bytes[6]) + (((bytes[7] << 8) + bytes[8]) / 100);
+      decoded.amp3 = ((bytes[9] << 8) + bytes[10]) + (((bytes[11] << 8) + bytes[12]) / 100);
+      decoded.amp4 = ((bytes[13] << 8) + bytes[14]) + (((bytes[15] << 8) + bytes[16]) / 100);
       break;
     case 0x02:
       decoded.tipo = "caida";
