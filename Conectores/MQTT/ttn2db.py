@@ -23,7 +23,31 @@ def uplink_callback(msg, client):
 #----------------------------------------------------------------------------------------------------
   # Valida que solo reciba datos del gateway gateway-demo 
   if gwid == 'gateway-demo':
-      if payload.tipo == 'temphum':
+      if payload.tipo == 'consumo':
+          print ('--------------------------------------')
+          print('CONSUMO')
+          print ('--------------------------------------')
+          print(msg.dev_id, payload.consumo, payload.amp1, payload.amp2, payload.amp3, payload.amp4, metadata.time)
+          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'consumo': payload.gotas, 'amp1': payload.amp1, 'amp2': payload.amp2, 'amp3': payload.amp3, 'amp4': payload.amp4}, Sensores.dev_id == msg.dev_id)
+      #----------------------------------------------------------------------------------------------------
+      #----------------------------------------------------------------------------------------------------
+      elif payload.tipo == 'caida':
+          print ('--------------------------------------')
+          print('CAIDA')
+          print ('--------------------------------------')
+          print(msg.dev_id, payload.caida, metadata.time)
+          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'caida': payload.caida}, Sensores.dev_id == msg.dev_id)
+      #----------------------------------------------------------------------------------------------------
+      #----------------------------------------------------------------------------------------------------
+      elif payload.tipo == 'gotas':
+          print ('--------------------------------------')
+          print('GOTAS')
+          print ('--------------------------------------')
+          print(msg.dev_id, payload.gotas, payload.triggs, metadata.time)
+          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'gotas': payload.gotas, 'triggs': payload.triggs}, Sensores.dev_id == msg.dev_id)
+      #----------------------------------------------------------------------------------------------------
+      #----------------------------------------------------------------------------------------------------
+      elif payload.tipo == 'temphum':
           print ('--------------------------------------')
           print('HUMEDAD')
           print ('--------------------------------------')
@@ -81,30 +105,6 @@ def uplink_callback(msg, client):
   
           print(msg.dev_id, anterior, actual, estado, metadata.time)
   
-      #----------------------------------------------------------------------------------------------------
-      #----------------------------------------------------------------------------------------------------
-      elif payload.tipo == 'gotas':
-          print ('--------------------------------------')
-          print('GOTAS')
-          print ('--------------------------------------')
-          print(msg.dev_id, payload.gotas, payload.triggs, metadata.time)
-          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'gotas': payload.gotas, 'triggs': payload.triggs}, Sensores.dev_id == msg.dev_id)
-      #----------------------------------------------------------------------------------------------------
-      #----------------------------------------------------------------------------------------------------
-      elif payload.tipo == 'consumo':
-          print ('--------------------------------------')
-          print('CONSUMO')
-          print ('--------------------------------------')
-          #print(msg.dev_id, payload.gotas, payload.triggs, metadata.time)
-          #db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'gotas': payload.gotas, 'triggs': payload.triggs}, Sensores.dev_id == msg.dev_id)
-      #----------------------------------------------------------------------------------------------------
-      #----------------------------------------------------------------------------------------------------
-      elif payload.tipo == 'caida':
-          print ('--------------------------------------')
-          print('CAIDA')
-          print ('--------------------------------------')
-          print(msg.dev_id, payload.caida, metadata.time)
-          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'caida': payload.caida}, Sensores.dev_id == msg.dev_id)
       #----------------------------------------------------------------------------------------------------
       #----------------------------------------------------------------------------------------------------
       else:
