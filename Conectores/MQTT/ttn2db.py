@@ -23,12 +23,12 @@ def uplink_callback(msg, client):
 #----------------------------------------------------------------------------------------------------
   # Valida que solo reciba datos del gateway gateway-demo 
   if gwid == 'gateway-demo':
-      if payload.tipo == 'consumo':
+      if payload.tipo == 'amps':
           print ('--------------------------------------')
           print('CONSUMO')
           print ('--------------------------------------')
-          print(msg.dev_id, payload.consumo, payload.amp1, payload.amp2, payload.amp3, payload.amp4, metadata.time)
-          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'consumo': payload.gotas, 'amp1': payload.amp1, 'amp2': payload.amp2, 'amp3': payload.amp3, 'amp4': payload.amp4}, Sensores.dev_id == msg.dev_id)
+          print(msg.dev_id, payload.amp1, payload.amp2, payload.amp3, payload.amp4, metadata.time)
+          db.upsert({'dev_id': msg.dev_id, 'time': metadata.time, 'amp1': payload.amp1, 'amp2': payload.amp2, 'amp3': payload.amp3, 'amp4': payload.amp4}, Sensores.dev_id == msg.dev_id)
       #----------------------------------------------------------------------------------------------------
       #----------------------------------------------------------------------------------------------------
       elif payload.tipo == 'caida':
