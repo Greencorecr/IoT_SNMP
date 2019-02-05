@@ -15,3 +15,8 @@ Una vez que el ESP32 recibe el dato, lo almacena en una variable de ambiente, pr
 ## Programando
 
 Se recomienda subir el código a ambas tarjetas, utilizar una interface serial con capacidad de 3V-5V y compruebe el envío y recepción de ambas tarjetas de forma independiente, antes de conectar el convertidor de lógica.
+
+## Depuración
+
+#### Los datos enviados a TTN son "0000" en lugar de un valor real del sensor.
+Esto es normal para el paquete 0, sin embargo si recibe este error de manera esporádica, y el ESP32 no se está reiniciando o reiniciando su contador de TTN; dependiendo de la frecuencia en que desee enviar los paquetes de monitoreo, se recomienda que el valor del ``delay()`` en el Arduino-Nano, no sea mayor al valor de TX_INTERVAL.
