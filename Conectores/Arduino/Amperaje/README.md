@@ -16,6 +16,10 @@ Una vez que el ESP32 recibe el dato, lo almacena en una variable de ambiente, pr
 
 Se recomienda subir el código a ambas tarjetas, utilizar una interface serial con capacidad de 3V-5V y compruebe el envío y recepción de ambas tarjetas de forma independiente, antes de conectar el convertidor de lógica.
 
+## ¿Como lee el amperaje?
+
+El sensor hace el uso de Transformadores de Corriente (o **CT** por sus siglas en inglés) individuales, de tipo split-core para para medir sin necesidad de interrumpir el cable de fase, hasta un [máximo de 100A](ftp://imall.iteadstudio.com/Sensor/IM120628007/Specs_IM120628007.pdf). Para comprender un poco la teoría de los CTs puede visitar este [tutorial](https://learn.openenergymonitor.org/electricity-monitoring/ct-sensors/introduction?redirected=true). Gracias a la Ley de Ohm, también podemos calcular los Watts sobre la línea, conociendo previamente el voltaje.
+
 ## Depuración
 
 #### Los datos enviados a TTN son "0000" en lugar de un valor real del sensor.
