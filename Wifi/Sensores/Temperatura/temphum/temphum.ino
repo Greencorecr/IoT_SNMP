@@ -34,19 +34,95 @@
 #include <ESPmDNS.h>
 #include <PubSubClient.h>
 
-const char *ssid = "gcs-wifi";
-const char *password = "WifiClave";
-const char* mqtt_server = "10.42.IP.IP";
+#include <U8g2lib.h>
+U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
+#include "config.h"
 
-WebServer server(80);
 WiFiClient espClient;
 PubSubClient client(espClient);
 long lastMsg = 0;
 char msg[50];
-int value = 0;
 
-const int led = 13;
+#include "DHTesp.h"
+#include "Ticker.h"
+
+DHTesp dht;
+
+void tempTask(void *pvParameters);
+bool getTemperature();
+void triggerGetTemp();
+
+/** Task handle for the light value read task */
+TaskHandle_t tempTaskHandle = NULL;
+/** Ticker for temperature reading */
+Ticker tempTicker;
+/** Comfort profile */
+ComfortState cf;
+/** Flag if task should run */
+bool tasksEnabled = false;
+/** Pin number for DHT11 data pin */
+int dhtPin = 25;
+
+void setup(void) {
+  Serial.begin(115200);                                // Inicio de Serial
+  WiFi.mode(WIFI_STA);                                 // Inicio de Wifi
+  WiFi.begin(ssid, password);
+  Serial.println("");
+
+  // Wait for connection
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.print("Connected to ");
+  Serial.println(ssid);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  if (MDNS.begin("esp32")) {                           // Inicio de MDNS
+    Serial.println("MDNS responder started");
+  }
+  client.setServer(mqtt_server, 1883);                 // Inicio de MQTT
+  client.setCallback(callback);
+
+  u8g2.begin();                                        // Inicio de pantalla
+
+}
+void loop(void) {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  long now = millis();
+  if (now - lastMsg > intervalo) {
+    lastMsg = now;
+    Serial.println("Publish message.");
+    client.publish("temp", "42.0");
+    client.publish("hum", "80.0");
+
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB08_tr);
+    u8g2.drawXBMP(39,0,50,50,greenfoot_bits);
+    u8g2.drawStr(5,64,"GreenCore Solutions");
+    u8g2.sendBuffer();
+    u8g2.clearBuffer();
+    u8g2.clearDisplay();
+    u8g2.setFont(u8g2_font_ncenB24_tr);
+    u8g2.drawStr(5,44,"Foo");
+    u8g2.sendBuffer();
+  }
+}
+
+
+
+/* 
+ *  Funciones para Cliente MQTT 
+ */
+
 
 void reconnect() {
   // Loop until we're reconnected
@@ -59,9 +135,12 @@ void reconnect() {
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      // Mensajes relevante a "reconnect".. por ahora de ejemplo.
+      client.publish("sensor/temphum01/temp", "42.0");
+      client.publish("sensor/temphum01/hum", "80.0");
+
       // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("sensor/temphum01/incomming");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -81,6 +160,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.println();
 
+/*
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
     digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
@@ -89,128 +169,73 @@ void callback(char* topic, byte* payload, unsigned int length) {
   } else {
     digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
   }
-
+*/
 }
 
 
 
-void handleRoot() {
-  digitalWrite(led, 1);
-  char temp[400];
-  int sec = millis() / 1000;
-  int min = sec / 60;
-  int hr = min / 60;
+/*
+ * 
+ * Funciones de DHT
+ */
 
-  snprintf(temp, 400,
 
-           "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
+bool initTemp() {
+  byte resultValue = 0;
+  // Initialize temperature sensor
+  dht.setup(dhtPin, DHTesp::DHT11);
+  Serial.println("DHT initiated");
 
-           hr, min % 60, sec % 60
-          );
-  server.send(200, "text/html", temp);
-  digitalWrite(led, 0);
+  // Start task to get temperature
+  xTaskCreatePinnedToCore(
+      tempTask,                       /* Function to implement the task */
+      "tempTask ",                    /* Name of the task */
+      4000,                           /* Stack size in words */
+      NULL,                           /* Task input parameter */
+      5,                              /* Priority of the task */
+      &tempTaskHandle,                /* Task handle. */
+      1);                             /* Core where the task should run */
+
+  if (tempTaskHandle == NULL) {
+    Serial.println("Failed to start task for temperature update");
+    return false;
+  } else {
+    // Start update of environment data every 10 seconds
+    tempTicker.attach(10, triggerGetTemp);
+  }
+  return true;
 }
 
-void handleNotFound() {
-  digitalWrite(led, 1);
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-
-  server.send(404, "text/plain", message);
-  digitalWrite(led, 0);
-}
-
-void setup(void) {
-  pinMode(led, OUTPUT);
-  digitalWrite(led, 0);
-  Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  Serial.println("");
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  if (MDNS.begin("esp32")) {
-    Serial.println("MDNS responder started");
-  }
-
-  server.on("/", handleRoot);
-  server.on("/test.svg", drawGraph);
-  server.on("/inline", []() {
-    server.send(200, "text/plain", "this works as well");
-  });
-  server.onNotFound(handleNotFound);
-  server.begin();
-  Serial.println("HTTP server started");
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-}
-
-void loop(void) {
-  server.handleClient();
-    if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
-
-  long now = millis();
-  if (now - lastMsg > 2000) {
-    lastMsg = now;
-    ++value;
-    snprintf (msg, 50, "hello world #%ld", value);
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    client.publish("outTopic", msg);
+void triggerGetTemp() {
+  if (tempTaskHandle != NULL) {
+     xTaskResumeFromISR(tempTaskHandle);
   }
 }
 
-void drawGraph() {
-  String out = "";
-  char temp[100];
-  out += "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" width=\"400\" height=\"150\">\n";
-  out += "<rect width=\"400\" height=\"150\" fill=\"rgb(250, 230, 210)\" stroke-width=\"1\" stroke=\"rgb(0, 0, 0)\" />\n";
-  out += "<g stroke=\"black\">\n";
-  int y = rand() % 130;
-  for (int x = 10; x < 390; x += 10) {
-    int y2 = rand() % 130;
-    sprintf(temp, "<line x1=\"%d\" y1=\"%d\" x2=\"%d\" y2=\"%d\" stroke-width=\"1\" />\n", x, 140 - y, x + 10, 140 - y2);
-    out += temp;
-    y = y2;
+void tempTask(void *pvParameters) {
+  Serial.println("tempTask loop started");
+  while (1) // tempTask loop
+  {
+    if (tasksEnabled) {
+      // Get temperature values
+      getTemperature();
+    }
+    // Got sleep again
+    vTaskSuspend(NULL);
   }
-  out += "</g>\n</svg>\n";
+}
 
-  server.send(200, "image/svg+xml", out);
+bool getTemperature() {
+  // Reading temperature for humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (it's a very slow sensor)
+  TempAndHumidity newValues = dht.getTempAndHumidity();
+  // Check if any reads failed and exit early (to try again).
+  if (dht.getStatus() != 0) {
+    Serial.println("DHT11 error status: " + String(dht.getStatusString()));
+    return false;
+  }
+
+  Serial.println(" T:" + String(newValues.temperature) + " H:" + String(newValues.humidity));
+
+  return true;
 }
