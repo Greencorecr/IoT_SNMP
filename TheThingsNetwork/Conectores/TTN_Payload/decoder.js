@@ -31,7 +31,7 @@ function Decoder(bytes, port) {
       break;
     case 0x16:
       decoded.tipo = "puerta";
-      decoded.triggs = (bytes[1] << 8)    + bytes[2];
+      decoded.triggs = (bytes[1] << 24) + (bytes[2] << 16)+ (bytes[3] << 8) + bytes[4];
       break;
   }
   return decoded;
