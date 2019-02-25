@@ -1,8 +1,9 @@
 /*
- * Sensor de caída eléctrica
+ * Sensor de temperatura y humedad
  * Para ESP32 TTGOv2
  * por Greencore Solutions
- * Usa pin 36 con divisor de voltaje para monitorear +5V
+ * Usa pin 25 para leer al DHT11
+ * 
  * Debe definir APPEUI, DEVEUI, APPKEY
  */
 
@@ -11,11 +12,11 @@
 #include <hal/hal.h>
 #include <SPI.h>
 #include <Wire.h>
+#include "DHTesp.h"
+#include "Ticker.h"
 #include<U8g2lib.h>
+#include<Arduino.h>
 
-
-const int analogInPin = 36;  // Analog input pin that the potentiometer is attached to
-int sensorValue = 0;        // value read from the pot
 
 // Imagen de GreenCore 50x50 px
 #define greenfoot_width 50
@@ -67,25 +68,30 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 unsigned long previousMillis = 0;
 const long interval = 300000;
 unsigned int paqCont = 0;
-int estado = 0;
-uint8_t mydata[] = "000";
+uint8_t mydata[] = "00000";
 static osjob_t sendjob;
-
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
 const unsigned TX_INTERVAL = 30;
 
-// Pin mapping
-const lmic_pinmap lmic_pins = {
-    .nss = 18,
-    .rxtx = LMIC_UNUSED_PIN,
-    .rst = 14,
-    .dio = {26, 33, 32}  // Pins for the Heltec ESP32 Lora board/ TTGO Lora32 with 3D metal antenna
-};
+DHTesp dht;
 
+void tempTask(void *pvParameters);
+bool getTemperature();
+void triggerGetTemp();
 
-void(* resetFunc) (void) = 0; //declare reset function @ address 0
+/** Task handle for the light value read task */
+TaskHandle_t tempTaskHandle = NULL;
+/** Ticker for temperature reading */
+Ticker tempTicker;
+/** Comfort profile */
+ComfortState cf;
+/** Flag if task should run */
+bool tasksEnabled = false;
+/** Pin number for DHT11 data pin */
+int dhtPin = 25;
+
 
 void logo(){
     // LOGO
@@ -97,41 +103,93 @@ void logo(){
     u8g2.sendBuffer();
 }
 
-void revisarEstado(){
-    // Carga datos del sensor
-    sensorValue = analogRead(analogInPin);
-    
-    // Adaptador conectado, recibe ~0.9v, no hay caída eléctrica. sensorValue == 0 cuando esta inicializando
-    if (sensorValue == 0 || sensorValue > 800){
-      estado = 0;
-    } 
-    // Adaptador desconectado, solo recibe energía de la batería, recibe ~0.5v, sí hay caída eléctrica
-    else {
-      estado = 1;
-    }
+bool initTemp() {
+  byte resultValue = 0;
+  // Initialize temperature sensor
+  dht.setup(dhtPin, DHTesp::DHT11);
+  Serial.println("DHT initiated");
+
+  // Start task to get temperature
+  xTaskCreatePinnedToCore(
+      tempTask,                       /* Function to implement the task */
+      "tempTask ",                    /* Name of the task */
+      4000,                           /* Stack size in words */
+      NULL,                           /* Task input parameter */
+      5,                              /* Priority of the task */
+      &tempTaskHandle,                /* Task handle. */
+      1);                             /* Core where the task should run */
+
+  if (tempTaskHandle == NULL) {
+    Serial.println("Failed to start task for temperature update");
+    return false;
+  } else {
+    // Start update of environment data every 10 seconds
+    tempTicker.attach(10, triggerGetTemp);
+  }
+  return true;
 }
 
-void muestraDatos(){
-    // Se llama funcion de revision
-    revisarEstado();
-    u8g2.clearBuffer();
-    u8g2.clearDisplay();
-    u8g2.setFont(u8g2_font_ncenB10_tr);
-    u8g2.drawStr(40, 15, "Estado");
-
-    char estadoString[2]; 
-    dtostrf(estado,2,0,estadoString);
-    u8g2.setFont(u8g2_font_ncenB08_tr);
-    if (estado == 0){
-      u8g2.drawStr(62, 30,estadoString);
-      u8g2.drawStr(15, 50,"Si hay electricidad");
-    }
-    else {
-      u8g2.drawStr(62, 30,estadoString);
-      u8g2.drawStr(15, 50,"No hay electricidad");
-    }
-    u8g2.sendBuffer(); 
+void triggerGetTemp() {
+  if (tempTaskHandle != NULL) {
+     xTaskResumeFromISR(tempTaskHandle);
+  }
 }
+
+void tempTask(void *pvParameters) {
+  Serial.println("tempTask loop started");
+  while (1) // tempTask loop
+  {
+    if (tasksEnabled) {
+      // Get temperature values
+      getTemperature();
+    }
+    // Got sleep again
+    vTaskSuspend(NULL);
+  }
+}
+
+bool getTemperature() {
+  // Reading temperature for humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (it's a very slow sensor)
+  TempAndHumidity newValues = dht.getTempAndHumidity();
+  // Check if any reads failed and exit early (to try again).
+  if (dht.getStatus() != 0) {
+    Serial.println("DHT11 error status: " + String(dht.getStatusString()));
+    return false;
+  }
+
+  Serial.println(" T:" + String(newValues.temperature) + " H:" + String(newValues.humidity));
+  
+  // DATOS DEL SENSOR
+  u8g2.clearBuffer();
+  u8g2.clearDisplay();
+  u8g2.setFont(u8g2_font_ncenB24_tr);
+  char tempString[3];
+  char humString[3];
+  dtostrf(newValues.temperature,3,0,tempString);
+  dtostrf(newValues.humidity,3,0,humString);
+  u8g2.drawStr(5,44,tempString);
+  u8g2.drawStr(69,44,humString);
+  u8g2.sendBuffer();
+
+  mydata[1] = highByte((int) newValues.temperature);
+  mydata[2] = lowByte((int) newValues.temperature);
+  mydata[3] = highByte((int) newValues.humidity);
+  mydata[4] = lowByte((int) newValues.humidity);
+
+  return true;
+}
+
+// Pin mapping
+const lmic_pinmap lmic_pins = {
+    .nss = 18,
+    .rxtx = LMIC_UNUSED_PIN,
+    .rst = 14,
+    .dio = {26, 33, 32}  // Pins for the Heltec ESP32 Lora board/ TTGO Lora32 with 3D metal antenna
+};
+
+
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 void onEvent (ev_t ev) {
     Serial.print(os_getTime());
@@ -167,19 +225,14 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            Serial.println("estado: ");
-            Serial.println(estado);
-            Serial.println("sensorValue: ");
-            Serial.println(sensorValue);
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
                 Serial.write(LMIC.frame+LMIC.dataBeg, LMIC.dataLen);
+                Serial.println();
             }
             // Schedule next transmission
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
-            // Muestra datos de sensor
-            muestraDatos();            
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -204,54 +257,51 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
-
-    unsigned long currentMillis = millis();
-
     // LOGO
     logo();
-    delay(1000);
-  
-    // Se llama funcion de revision antes de alistar paquete
-    revisarEstado();
-    mydata[1] = estado;
+    delay(1000); // muestra el logo por 5 segundos  
 
+    unsigned long currentMillis = millis();
+    
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
-    } 
-    else {
-        // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-    }
-    Serial.println(F("Packet queued"));
+    } else {
+           // Prepare upstream data transmission at the next possible time.
+           LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+        }
+    Serial.println(F("Paquete procesado"));
     Serial.println(LMIC.freq);
 
-     // INFORMACIÓN GENERAL
+ // INFORMACIÓN GENERAL
     char frecString[10]; 
     dtostrf(LMIC.freq/1000000.0,3,2,frecString);
-    char paqString[10]; 
-    dtostrf(paqCont,2,0,paqString);
+    char paqString02[10]; 
+    dtostrf(paqCont,2,0,paqString02);
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB08_tr);
-    u8g2.drawStr(0, 10, "Sensor Caida");
+    u8g2.drawStr(0, 10, "Temperatura-Humedad");
     u8g2.drawStr(0, 30, "Frecuencia: ");
     u8g2.drawStr(68,30,frecString);
     u8g2.drawStr(100,30," Mhz");
     u8g2.drawStr(0,50,"Paquete: ");
-    u8g2.drawStr(50,50,paqString);
+    u8g2.drawStr(50,50,paqString02);
     u8g2.sendBuffer();
     delay(1000);
-     
     paqCont++;
+
 }
 
 void setup() {
+    initTemp();
+    // Signal end of setup() to tasks
+    tasksEnabled = true;
     Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
     #ifdef VCC_ENABLE
-    // For Pinoccio Scout boardsc
+    // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
     digitalWrite(VCC_ENABLE, HIGH);
     delay(1000);
@@ -274,13 +324,22 @@ void setup() {
     // Set data rate and transmit power (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF7,14);
 
-    // Tipo sensor
-    mydata[0] = 0x02;
+    // tipo de sensor
+    mydata[0] = 0x08;
 
     // Start job
     do_send(&sendjob);
 }
 
 void loop() {
+  if (!tasksEnabled) {
+    // Wait 15 seconds to let system settle down
+    delay(15000);
+    // Enable task that will read values from the DHT sensor
+    tasksEnabled = true;
+    if (tempTaskHandle != NULL) {
+      vTaskResume(tempTaskHandle);
+    }
+  }
   os_runloop_once();
 }

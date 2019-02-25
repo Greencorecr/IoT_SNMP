@@ -49,13 +49,13 @@ static const unsigned char greenfoot_bits[] PROGMEM = {
    0xff, 0x00 };
 
 
-static const u1_t PROGMEM DEVEUI[8]={  } ; // Device EUI, hex, lsb
+static const u1_t PROGMEM DEVEUI[8]={ } ; // Device EUI, hex, lsb
 void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 
-static const u1_t PROGMEM APPEUI[8]={  }; // Application EUI, hex, lsb
+static const u1_t PROGMEM APPEUI[8]={ }; // Application EUI, hex, lsb
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8);}
 
-static const u1_t PROGMEM APPKEY[16] = {  }; // App Key, hex, msb
+static const u1_t PROGMEM APPKEY[16] = { }; // App Key, hex, msb
 void os_getDevKey (u1_t* buf) {  memcpy_P(buf, APPKEY, 16);}
 
 
@@ -96,7 +96,7 @@ Trigger puerta1 = {34, 0, false};
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
     puerta1.pressed = true;
-    //Serial.println(puerta1.numberKeyPresses);
+    Serial.println(puerta1.numberKeyPresses);
 }
 
 void logo(){
@@ -110,34 +110,15 @@ void logo(){
 }
 
 void muestraDatos(){
-    int contador = 1;
     char actString[10]; 
-
     // Muestra cantidad de activaciones (triggers) al activarse el sensor de puerta
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB10_tr);
     u8g2.drawStr(15, 10, "Activaciones ");
-    
-    // Activaciones - Triggers
-    // Se envía paquete cada 30 segundos, por lo cual durante 20 segundos se reimprime el valor de puerta1.numberKeyPresses
-    // para visualizar en pantalla cuando se abre
-    while (contador != 20){
-      Serial.println(contador);
-      dtostrf(puerta1.numberKeyPresses,9,0,actString);
-
-      // Dibuja cuadro del color del fondo para ocultar dato anterior 
-      u8g2.setDrawColor(0);
-      u8g2.drawBox(0,25,164,20);
-      u8g2.sendBuffer(); 
-
-      // Activa nuevamente color default (blanco)
-      u8g2.setDrawColor(1);
-      u8g2.drawStr(25, 40,actString);
-      u8g2.sendBuffer(); 
-      delay(1000);  
-      contador++;
-    }
+    dtostrf(puerta1.numberKeyPresses,9,0,actString);
+    u8g2.drawStr(25, 40,actString);
+    u8g2.sendBuffer();     
 }
 
 void(* resetFunc) (void) = 0; //declare reset function @ address 0
@@ -190,7 +171,7 @@ void onEvent (ev_t ev) {
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
 
             // Muestra datos de activaciones/triggers
-//            muestraDatos();
+            muestraDatos();
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -237,7 +218,7 @@ void do_send(osjob_t* j){
 
     // LOGO
     logo();
-    //delay(2000); // muestra el logo por 2 segundos  
+    delay(1000); 
     
     // INFORMACIÓN GENERAL
     char frecString[10]; 
@@ -254,7 +235,8 @@ void do_send(osjob_t* j){
     u8g2.drawStr(0,50,"Paquete: ");
     u8g2.drawStr(50,50,paqString);
     u8g2.sendBuffer();
-    //delay(2000);
+    delay(1000);
+
     
     // Contador de paquetes enviados a TTN
     paqCont++;  
@@ -266,7 +248,6 @@ void setup() {
     Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
-//    u8g2.setFont(u8x8_font_chroma48medium8_r);
     #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);

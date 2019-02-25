@@ -1,8 +1,9 @@
 /*
- * Sensor de caída eléctrica
+ * Sensor de consumo eléctrico
  * Para ESP32 TTGOv2
  * por Greencore Solutions
- * Usa pin 36 con divisor de voltaje para monitorear +5V
+ * Usa serial2 y empaqueta hacia TTN
+ * 
  * Debe definir APPEUI, DEVEUI, APPKEY
  */
 
@@ -12,10 +13,8 @@
 #include <SPI.h>
 #include <Wire.h>
 #include<U8g2lib.h>
+#include<Arduino.h>
 
-
-const int analogInPin = 36;  // Analog input pin that the potentiometer is attached to
-int sensorValue = 0;        // value read from the pot
 
 // Imagen de GreenCore 50x50 px
 #define greenfoot_width 50
@@ -67,14 +66,17 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 unsigned long previousMillis = 0;
 const long interval = 300000;
 unsigned int paqCont = 0;
-int estado = 0;
-uint8_t mydata[] = "000";
-static osjob_t sendjob;
+uint8_t mydata[] = "00000000000000000";
 
+// Para lectura de Serial2
+String inputString = "";      // a String to hold incoming data
+bool stringComplete = false;  // whether the string is complete
+
+static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 30;
+const unsigned TX_INTERVAL = 60;
 
 // Pin mapping
 const lmic_pinmap lmic_pins = {
@@ -95,42 +97,6 @@ void logo(){
     u8g2.drawXBMP(39,0,50,50,greenfoot_bits);
     u8g2.drawStr(5,64,"GreenCore Solutions");
     u8g2.sendBuffer();
-}
-
-void revisarEstado(){
-    // Carga datos del sensor
-    sensorValue = analogRead(analogInPin);
-    
-    // Adaptador conectado, recibe ~0.9v, no hay caída eléctrica. sensorValue == 0 cuando esta inicializando
-    if (sensorValue == 0 || sensorValue > 800){
-      estado = 0;
-    } 
-    // Adaptador desconectado, solo recibe energía de la batería, recibe ~0.5v, sí hay caída eléctrica
-    else {
-      estado = 1;
-    }
-}
-
-void muestraDatos(){
-    // Se llama funcion de revision
-    revisarEstado();
-    u8g2.clearBuffer();
-    u8g2.clearDisplay();
-    u8g2.setFont(u8g2_font_ncenB10_tr);
-    u8g2.drawStr(40, 15, "Estado");
-
-    char estadoString[2]; 
-    dtostrf(estado,2,0,estadoString);
-    u8g2.setFont(u8g2_font_ncenB08_tr);
-    if (estado == 0){
-      u8g2.drawStr(62, 30,estadoString);
-      u8g2.drawStr(15, 50,"Si hay electricidad");
-    }
-    else {
-      u8g2.drawStr(62, 30,estadoString);
-      u8g2.drawStr(15, 50,"No hay electricidad");
-    }
-    u8g2.sendBuffer(); 
 }
 
 void onEvent (ev_t ev) {
@@ -167,19 +133,14 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            Serial.println("estado: ");
-            Serial.println(estado);
-            Serial.println("sensorValue: ");
-            Serial.println(sensorValue);
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
                 Serial.write(LMIC.frame+LMIC.dataBeg, LMIC.dataLen);
+                Serial.println();
             }
             // Schedule next transmission
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
-            // Muestra datos de sensor
-            muestraDatos();            
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -204,54 +165,130 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
-
-    unsigned long currentMillis = millis();
-
+    unsigned int sensorCount = 0;
+    String sensorData[4] = "0000";
     // LOGO
     logo();
-    delay(1000);
-  
-    // Se llama funcion de revision antes de alistar paquete
-    revisarEstado();
-    mydata[1] = estado;
+    delay(1000); // muestra el logo por 5 segundos  
 
+    // TODO: Mover a funcion
+    while (Serial2.available()) {
+      // get the new byte:
+      char inChar = (char)Serial2.read();
+      // add it to the inputString:
+      if (inChar == ':') {
+        sensorData[sensorCount] = inputString;
+        inputString="";
+        sensorCount++;        
+      } else if (inChar == '\n') {
+        sensorData[3]= inputString;
+        Serial.print("sensorData[0]: ");
+        Serial.println(sensorData[0]);
+        Serial.print("sensorData[1]: ");
+        Serial.println(sensorData[1]);
+        Serial.print("sensorData[2]: ");
+        Serial.println(sensorData[2]);
+        Serial.print("sensorData[3]: ");
+        Serial.println(sensorData[3]); 
+        inputString = "";
+        stringComplete = true;
+        sensorCount = 0;
+      } else {
+        inputString += inChar;
+      }
+    } 
+
+    // Creando paquete para sensor0-3
+    int tempInteger = sensorData[0].toInt();
+    mydata[1] = highByte(tempInteger);
+    mydata[2] = lowByte(tempInteger);
+    float tempFloat = (sensorData[0].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[3] = highByte(tempInteger);
+    mydata[4] = lowByte(tempInteger);
+
+    tempInteger = sensorData[1].toInt();
+    mydata[5] = highByte(tempInteger);
+    mydata[6] = lowByte(tempInteger);
+    tempFloat = (sensorData[1].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[7] = highByte(tempInteger);
+    mydata[8] = lowByte(tempInteger);
+
+    tempInteger = sensorData[2].toInt();
+    mydata[9] = highByte(tempInteger);
+    mydata[10] = lowByte(tempInteger);
+    tempFloat = (sensorData[2].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[11] = highByte(tempInteger);
+    mydata[12] = lowByte(tempInteger);
+
+    tempInteger = sensorData[3].toInt();
+    mydata[13] = highByte(tempInteger);
+    mydata[14] = lowByte(tempInteger);
+    tempFloat = (sensorData[3].toFloat() - tempInteger) * 100;
+    tempInteger = int(tempFloat);
+    mydata[15] = highByte(tempInteger);
+    mydata[16] = lowByte(tempInteger);
+
+
+
+    unsigned long currentMillis = millis();
+    
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
-    } 
-    else {
-        // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-    }
+    } else {
+           // Prepare upstream data transmission at the next possible time.
+           LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+        }
     Serial.println(F("Packet queued"));
     Serial.println(LMIC.freq);
 
-     // INFORMACIÓN GENERAL
+ // INFORMACIÓN GENERAL
     char frecString[10]; 
     dtostrf(LMIC.freq/1000000.0,3,2,frecString);
-    char paqString[10]; 
-    dtostrf(paqCont,2,0,paqString);
+    char paqString02[10]; 
+    dtostrf(paqCont,2,0,paqString02);
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB08_tr);
-    u8g2.drawStr(0, 10, "Sensor Caida");
-    u8g2.drawStr(0, 30, "Frecuencia: ");
-    u8g2.drawStr(68,30,frecString);
-    u8g2.drawStr(100,30," Mhz");
-    u8g2.drawStr(0,50,"Paquete: ");
-    u8g2.drawStr(50,50,paqString);
+    u8g2.drawStr(0, 10, "Consumo Eléctrico");
+    u8g2.drawStr(0, 20, "Frecuencia: ");
+    u8g2.drawStr(68,20,frecString);
+    u8g2.drawStr(100,20," MHz");
+    u8g2.drawStr(0,30,"Paquete: ");
+    u8g2.drawStr(50,30,paqString02);
+
+    u8g2.drawStr(0,40,"s1: ");
+    u8g2.drawStr(60,40,"s2: ");
+    u8g2.drawStr(0,50,"s3: ");
+    u8g2.drawStr(60,50,"s4: ");
+
+    char sensorData0[5];
+    char sensorData1[5];
+    char sensorData2[5];
+    char sensorData3[5];
+    sensorData[0].toCharArray(sensorData0, 5);
+    sensorData[1].toCharArray(sensorData1, 5);
+    sensorData[2].toCharArray(sensorData2, 5);
+    sensorData[3].toCharArray(sensorData3, 5);
+    u8g2.drawStr(30,40,sensorData0);
+    u8g2.drawStr(90,40,sensorData1);
+    u8g2.drawStr(30,50,sensorData2);
+    u8g2.drawStr(90,50,sensorData3);
+
     u8g2.sendBuffer();
-    delay(1000);
-     
     paqCont++;
 }
 
 void setup() {
+    Serial2.begin(115200); // Desde Arduino-Nano
     Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
     #ifdef VCC_ENABLE
-    // For Pinoccio Scout boardsc
+    // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
     digitalWrite(VCC_ENABLE, HIGH);
     delay(1000);
@@ -274,8 +311,9 @@ void setup() {
     // Set data rate and transmit power (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF7,14);
 
-    // Tipo sensor
-    mydata[0] = 0x02;
+
+    // tipo de sensor
+    mydata[0] = 0x01;
 
     // Start job
     do_send(&sendjob);

@@ -1,8 +1,9 @@
 /*
- * Sensor de caída eléctrica
+ * Sensor de gotas de agua
  * Para ESP32 TTGOv2
  * por Greencore Solutions
- * Usa pin 36 con divisor de voltaje para monitorear +5V
+ * Usa pin 34 en goteo1 en modo trigger
+ * 
  * Debe definir APPEUI, DEVEUI, APPKEY
  */
 
@@ -13,9 +14,6 @@
 #include <Wire.h>
 #include<U8g2lib.h>
 
-
-const int analogInPin = 36;  // Analog input pin that the potentiometer is attached to
-int sensorValue = 0;        // value read from the pot
 
 // Imagen de GreenCore 50x50 px
 #define greenfoot_width 50
@@ -51,7 +49,7 @@ static const unsigned char greenfoot_bits[] PROGMEM = {
    0xff, 0xff, 0xff, 0xff, 0x03, 0x00, 0xf8, 0xff, 0xff, 0xff, 0xff, 0x01,
    0x00, 0xf8, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00, 0xfc, 0xff, 0xff, 0xff,
    0xff, 0x00 };
-
+   
 static const u1_t PROGMEM DEVEUI[8]={ } ; // Device EUI, hex, lsb
 void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 
@@ -67,10 +65,9 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 unsigned long previousMillis = 0;
 const long interval = 300000;
 unsigned int paqCont = 0;
-int estado = 0;
 uint8_t mydata[] = "000";
-static osjob_t sendjob;
 
+static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
@@ -84,8 +81,18 @@ const lmic_pinmap lmic_pins = {
     .dio = {26, 33, 32}  // Pins for the Heltec ESP32 Lora board/ TTGO Lora32 with 3D metal antenna
 };
 
+struct Trigger {
+    const uint8_t PIN;
+    uint32_t numberKeyPresses;
+    bool pressed;
+};
+Trigger goteo1 = {34, 0, false};
 
-void(* resetFunc) (void) = 0; //declare reset function @ address 0
+void IRAM_ATTR isr() {
+    goteo1.numberKeyPresses += 1;
+    goteo1.pressed = true;
+    //Serial.println(goteo1.numberKeyPresses);
+}
 
 void logo(){
     // LOGO
@@ -97,41 +104,27 @@ void logo(){
     u8g2.sendBuffer();
 }
 
-void revisarEstado(){
-    // Carga datos del sensor
-    sensorValue = analogRead(analogInPin);
-    
-    // Adaptador conectado, recibe ~0.9v, no hay caída eléctrica. sensorValue == 0 cuando esta inicializando
-    if (sensorValue == 0 || sensorValue > 800){
-      estado = 0;
-    } 
-    // Adaptador desconectado, solo recibe energía de la batería, recibe ~0.5v, sí hay caída eléctrica
-    else {
-      estado = 1;
-    }
-}
-
 void muestraDatos(){
-    // Se llama funcion de revision
-    revisarEstado();
+    char actString[10]; 
+    // Muestra cantidad de activaciones (triggers) al activarse el sensor de gotas
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB10_tr);
-    u8g2.drawStr(40, 15, "Estado");
-
-    char estadoString[2]; 
-    dtostrf(estado,2,0,estadoString);
+    u8g2.drawStr(15, 10, "Activaciones ");
+    dtostrf(goteo1.numberKeyPresses,9,0,actString);
+    u8g2.drawStr(25, 40,actString);
     u8g2.setFont(u8g2_font_ncenB08_tr);
-    if (estado == 0){
-      u8g2.drawStr(62, 30,estadoString);
-      u8g2.drawStr(15, 50,"Si hay electricidad");
+    // No se han detecado gotas
+    if (goteo1.numberKeyPresses ==0){
+      u8g2.drawStr(20, 60,"OK no hay gotas");   
     }
     else {
-      u8g2.drawStr(62, 30,estadoString);
-      u8g2.drawStr(15, 50,"No hay electricidad");
+      u8g2.drawStr(0, 60,"WARN gotas detectadas");
     }
-    u8g2.sendBuffer(); 
+    u8g2.sendBuffer();   
 }
+
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 void onEvent (ev_t ev) {
     Serial.print(os_getTime());
@@ -167,19 +160,20 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            Serial.println("estado: ");
-            Serial.println(estado);
-            Serial.println("sensorValue: ");
-            Serial.println(sensorValue);
+            Serial.println("Paquete enviado");
+            Serial.println("numberKeyPresses: ");
+            Serial.print(goteo1.numberKeyPresses);
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
                 Serial.write(LMIC.frame+LMIC.dataBeg, LMIC.dataLen);
+                Serial.println();
             }
             // Schedule next transmission
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
-            // Muestra datos de sensor
-            muestraDatos();            
+            
+            // Muestra datos de activaciones/triggers
+            muestraDatos();
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -204,29 +198,27 @@ void onEvent (ev_t ev) {
 }
 
 void do_send(osjob_t* j){
-
     unsigned long currentMillis = millis();
 
-    // LOGO
-    logo();
-    delay(1000);
-  
-    // Se llama funcion de revision antes de alistar paquete
-    revisarEstado();
-    mydata[1] = estado;
+    mydata[1] = highByte(goteo1.numberKeyPresses);
+    mydata[2] = lowByte(goteo1.numberKeyPresses);
+
 
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
-    } 
-    else {
-        // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-    }
-    Serial.println(F("Packet queued"));
+    } else {
+           // Prepare upstream data transmission at the next possible time.
+           LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+        }
+    Serial.println(F("Pqaquete procesado"));
     Serial.println(LMIC.freq);
 
-     // INFORMACIÓN GENERAL
+    // LOGO
+    logo();
+    delay(1000); // muestra el logo por 2 segundos 
+
+    // INFORMACIÓN GENERAL
     char frecString[10]; 
     dtostrf(LMIC.freq/1000000.0,3,2,frecString);
     char paqString[10]; 
@@ -234,7 +226,7 @@ void do_send(osjob_t* j){
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB08_tr);
-    u8g2.drawStr(0, 10, "Sensor Caida");
+    u8g2.drawStr(0, 10, "Sensor Gotas");
     u8g2.drawStr(0, 30, "Frecuencia: ");
     u8g2.drawStr(68,30,frecString);
     u8g2.drawStr(100,30," Mhz");
@@ -242,16 +234,20 @@ void do_send(osjob_t* j){
     u8g2.drawStr(50,50,paqString);
     u8g2.sendBuffer();
     delay(1000);
-     
+
+    // Contador de paquetes enviados a TTN
     paqCont++;
 }
 
 void setup() {
+    pinMode(goteo1.PIN, INPUT_PULLUP);
+    attachInterrupt(goteo1.PIN, isr, FALLING);
     Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
+    u8g2.setFont(u8x8_font_chroma48medium8_r);
     #ifdef VCC_ENABLE
-    // For Pinoccio Scout boardsc
+    // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
     digitalWrite(VCC_ENABLE, HIGH);
     delay(1000);
@@ -275,12 +271,12 @@ void setup() {
     LMIC_setDrTxpow(DR_SF7,14);
 
     // Tipo sensor
-    mydata[0] = 0x02;
+    mydata[0] = 0x04;
 
     // Start job
     do_send(&sendjob);
 }
 
 void loop() {
-  os_runloop_once();
+    os_runloop_once();
 }
