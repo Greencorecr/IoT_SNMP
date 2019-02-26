@@ -10,7 +10,6 @@ Sensores = Query()
 app_id = "sensores-demo" # En Overview, Application ID
 access_key = "ttn-account-v2..." # Access Keys
 
-
 def find_between_r( s, first, last ):
   try:
       start = s.rindex( first ) + len( first )
@@ -25,7 +24,7 @@ def uplink_callback(msg, client):
   metadata = msg.metadata
   gateways = metadata.gateways
   gwid = gateways[0].gtw_id
-  rssi = gateways[0].rssi 
+  rssi = gateways[0].rssi
   snr = gateways[0].snr
   channel = gateways[0].channel
   coding_rate = metadata.data_rate
@@ -43,38 +42,38 @@ def uplink_callback(msg, client):
   #print('----------------------------')
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
-  # Valida que solo reciba datos del gateway gateway-demo 
+  # Valida que solo reciba datos del gateway gateway-demo
   #if gwid == 'gateway-demo':
   if payload.tipo == 'amps':
       print ('--------------------------------------')
       print('CONSUMO')
       print ('--------------------------------------')
-      db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'amp1': payload.amp1, 'amp2': payload.amp2, 'amp3': payload.amp3, 'amp4': payload.amp4}, Sensores.dev_id == msg.dev_id)
-      print('channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'amp1:', payload.amp1, 'amp2:', payload.amp2, 'amp3:', payload.amp3, 'amp4:', payload.amp4)
+      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'amp1': payload.amp1, 'amp2': payload.amp2, 'amp3': payload.amp3, 'amp4': payload.amp4}, Sensores.dev_id == msg.dev_id)
+      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'amp1:', payload.amp1, 'amp2:', payload.amp2, 'amp3:', payload.amp3, 'amp4:', payload.amp4)
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
   elif payload.tipo == 'caida':
       print ('--------------------------------------')
       print('CAIDA')
       print ('--------------------------------------')
-      db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'caida': payload.caida}, Sensores.dev_id == msg.dev_id)
-      print('channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'caida:', payload.caida)
+      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'caida': payload.caida}, Sensores.dev_id == msg.dev_id)
+      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'caida:', payload.caida)
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
   elif payload.tipo == 'gotas':
       print ('--------------------------------------')
       print('GOTAS')
       print ('--------------------------------------')
-      db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'gotas': payload.gotas, 'triggs': payload.triggs}, Sensores.dev_id == msg.dev_id)
-      print('channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'gotas:', payload.gotas, 'triggs:', payload.triggs)
+      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'gotas': payload.gotas, 'triggs': payload.triggs}, Sensores.dev_id == msg.dev_id)
+      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'gotas:', payload.gotas, 'triggs:', payload.triggs)
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
   elif payload.tipo == 'temphum':
       print ('--------------------------------------')
       print('HUMEDAD')
       print ('--------------------------------------')
-      db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'temp': payload.temp, 'hum': payload.hum}, Sensores.dev_id == msg.dev_id)
-      print('channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'temp:', payload.temp, 'hum:', payload.hum)
+      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'temp': payload.temp, 'hum': payload.hum}, Sensores.dev_id == msg.dev_id)
+      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'temp:', payload.temp, 'hum:', payload.hum)
 
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
@@ -82,8 +81,8 @@ def uplink_callback(msg, client):
       print ('--------------------------------------')
       print('PUERTA')
       print ('--------------------------------------')
-     
-      search = db.get(Sensores.dev_id == 'desarrollo-otaa-puerta')
+
+      search = db.get(Sensores.dev_id == 'dev_id_puerta')
       anterior = search.get("triggs_anterior")
       actual = payload.triggs
 
@@ -98,7 +97,7 @@ def uplink_callback(msg, client):
           #print(anterior)
           #print(actual)
           estado = 0
-          db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': 0, 'triggs_anterior': 0, 'triggs': 0}, Sensores.dev_id == msg.dev_id)
+          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': 0, 'triggs_anterior': 0, 'triggs': 0}, Sensores.dev_id == msg.dev_id)
 
       #No ha variado el dato, la puerta continua cerrada
       elif actual == anterior:
@@ -106,7 +105,7 @@ def uplink_callback(msg, client):
           #print(anterior)
           #print(actual)
           estado = 0
-          db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': anterior, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
+          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': anterior, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
 
       # Aumento el conteo, la puerta se abrio
       elif actual > anterior:
@@ -114,7 +113,7 @@ def uplink_callback(msg, client):
           #print(anterior)
           #print(actual)
           estado = 1
-          db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': actual, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
+          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': actual, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
 
       # Si el valor anterior es mayor que el actual, significa que la base de datos se desactualizó, se fuerza sincronizacion.
       else:
@@ -122,8 +121,8 @@ def uplink_callback(msg, client):
           #print(actual)
           #print(anterior)
           estado = 1
-          db.upsert({'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': actual, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
-      print('channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'estado:', estado, 'triggs_anterior:', actual, 'triggs:', actual)
+          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': actual, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
+      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'estado:', estado, 'triggs_anterior:', actual, 'triggs:', actual)
 
 
   #----------------------------------------------------------------------------------------------------
@@ -141,3 +140,4 @@ mqtt_client.set_uplink_callback(uplink_callback)
 mqtt_client.connect()
 while True:
     time.sleep(60)
+
