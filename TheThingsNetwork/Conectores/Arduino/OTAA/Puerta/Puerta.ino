@@ -263,13 +263,7 @@ void setup() {
 
     LMIC_selectSubBand(1);
 
-    //Disable FSB1, channels 0-7
-    for (int i = 0; i < 7; i++) {
-      if (i != 10)
-        LMIC_disableChannel(i);
-  
-    }
-     //Disable FSB2-8, channels 16-72
+    //Disable FSB2-8, channels 16-72
     for (int i = 16; i < 73; i++) {
       if (i != 10)
         LMIC_disableChannel(i);
@@ -277,9 +271,9 @@ void setup() {
     }
 
     LMIC_setClockError(MAX_CLOCK_ERROR * 1 / 100);
+
     // código sensor
     mydata[0] = 0x16;
-
 
     // Start job
     do_send(&sendjob);

@@ -300,21 +300,13 @@ void setup() {
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
     LMIC_selectSubBand(1);
-
- //Disable FSB1, channels 0-7
-  for (int i = 0; i < 7; i++) {
-    if (i != 10)
-      LMIC_disableChannel(i);
-
-  }
-  //Disable FSB2-8, channels 16-72
-  for (int i = 16; i < 73; i++) {
-    if (i != 10)
-      LMIC_disableChannel(i);
-
-  }
-  LMIC_setClockError(MAX_CLOCK_ERROR * 1 / 100);
-
+    //Disable FSB2-8, channels 16-72
+    for (int i = 16; i < 73; i++) {
+      if (i != 10)
+        LMIC_disableChannel(i);
+  
+    }
+    LMIC_setClockError(MAX_CLOCK_ERROR * 1 / 100);
 
     // tipo de sensor
     mydata[0] = 0x01;
