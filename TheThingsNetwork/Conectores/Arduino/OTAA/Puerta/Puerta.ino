@@ -145,6 +145,7 @@ void onEvent (ev_t ev) {
             break;
         case EV_JOINED:
             Serial.println(F("EV_JOINED"));
+            LMIC_setLinkCheckMode(0);
             break;
         case EV_RFU1:
             Serial.println(F("EV_RFU1"));
@@ -262,14 +263,19 @@ void setup() {
 
     LMIC_selectSubBand(1);
 
-   for (int channel=9; channel<72; ++channel) {
-      LMIC_disableChannel(channel);
-   }
+    //Disable FSB1, channels 0-7
+    for (int i = 0; i < 7; i++) {
+      if (i != 10)
+        LMIC_disableChannel(i);
+  
+    }
+     //Disable FSB2-8, channels 16-72
+    for (int i = 16; i < 73; i++) {
+      if (i != 10)
+        LMIC_disableChannel(i);
+ 
+    }
 
-    // Disable link check validation
-    LMIC_setLinkCheckMode(0);
-    // Set data rate and transmit power (note: txpow seems to be ignored by the library)
-//    LMIC_setDrTxpow(DR_SF7,14);
     LMIC_setClockError(MAX_CLOCK_ERROR * 1 / 100);
     // código sensor
     mydata[0] = 0x16;
