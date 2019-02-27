@@ -27,8 +27,8 @@ def uplink_callback(msg, client):
   rssi = gateways[0].rssi
   snr = gateways[0].snr
   channel = gateways[0].channel
-  coding_rate = metadata.data_rate
-  SF = find_between_r(coding_rate, "SF", "BW")
+  data_rate = metadata.data_rate
+  SF = find_between_r(data_rate, "SF", "BW")
   # Debugs
   #print('----------------------------')
   #print(gwid)
