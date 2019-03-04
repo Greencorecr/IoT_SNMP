@@ -3,9 +3,9 @@
 
 #ifdef OTAA
 // Valores para autenticación OTAA
-static const u1_t PROGMEM DEVEUI[8]={ 0x72, 0x02, 0x8E, 0x8E, 0xB5, 0x3A, 0x78, 0x00 } ; // Device EUI, hex, lsb
-static const u1_t PROGMEM APPEUI[8]={ 0xDE, 0x82, 0x01, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 }; // Application EUI, hex, lsb
-static const u1_t PROGMEM APPKEY[16] = { 0x91, 0xD6, 0x7E, 0x8D, 0xFD, 0x9C, 0x55, 0xAD, 0x0F, 0x8B, 0x57, 0x3D, 0x64, 0x80, 0xB2, 0x1F }; // App Key, hex, msb
+static const u1_t PROGMEM DEVEUI[8]={ } ; // Device EUI, hex, lsb
+static const u1_t PROGMEM APPEUI[8]={ }; // Application EUI, hex, lsb
+static const u1_t PROGMEM APPKEY[16] = { }; // App Key, hex, msb
 
 void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
 void os_getArtEui (u1_t* buf) { memcpy_P(buf, APPEUI, 8);}
