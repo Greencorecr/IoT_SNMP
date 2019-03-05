@@ -21,6 +21,10 @@ void os_getDevEui (u1_t* buf) { }
 void os_getDevKey (u1_t* buf) { }
 #endif
 
+const char* ssid       = "AP";
+const char* password   = "pass";
+const char* hostname   = "hostname";
+
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
 const unsigned TX_INTERVAL = 30;
