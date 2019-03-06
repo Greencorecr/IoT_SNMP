@@ -1,4 +1,4 @@
-# TTN_SNMP [![Build Status](https://travis-ci.org/Greencorecr/TTN_SNMP.svg?branch=master)](https://travis-ci.org/Greencorecr/TTN_SNMP)
+# TTN_SNMP [![Build Status](https://travis-ci.org/Greencorecr/IoT_SNMP.svg?branch=master)](https://travis-ci.org/Greencorecr/IoT_SNMP)
 Dispositivos con The Things Network para conectar a SNMP
 
 ## [Conector con MQTT](https://github.com/Greencorecr/TTN_SNMP/tree/master/Conectores/MQTT)
