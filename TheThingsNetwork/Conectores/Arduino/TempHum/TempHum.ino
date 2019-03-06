@@ -15,6 +15,8 @@
 #include "Ticker.h"
 #include<U8g2lib.h>
 #include<Arduino.h>
+#include <WiFi.h>
+#include <ESPmDNS.h>
 
 #include "config.h"
 
@@ -243,6 +245,16 @@ void setup() {
     Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
+    WiFi.setHostname(hostname);
+    WiFi.begin(ssid, password);
+    MDNS.begin(hostname);
+    MDNS.enableWorkstation();
+    MDNS.addService("snmp", "tcp", 161);
+    logo();
+    delay(5000);
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println(WiFi.localIP());
+    }
 
     // LMIC init
     os_init();
