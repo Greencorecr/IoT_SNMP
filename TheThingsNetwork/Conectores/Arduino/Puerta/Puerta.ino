@@ -13,11 +13,18 @@
 #include<U8g2lib.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
-
+#include <WiFiUdp.h>
+#include <Arduino_SNMP.h>
 
 #include "config.h"
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
+
+WiFiUDP udp;
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
+
+int changingNumber = 1;
+
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -204,6 +211,12 @@ void setup() {
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
+    snmp.setUDP(&udp);
+    snmp.begin();
+    changingNumber = int(puerta1.numberKeyPresses);
+    //changingNumberOID = snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &changingNumber);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.4.0", &changingNumber);
+
 
     // LMIC init
     os_init();
@@ -233,4 +246,6 @@ void setup() {
 
 void loop() {
     os_runloop_once();
+    changingNumber = int(puerta1.numberKeyPresses);
+    snmp.loop();
 }
