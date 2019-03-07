@@ -29,6 +29,10 @@ def uplink_callback(msg, client):
   channel = gateways[0].channel
   data_rate = metadata.data_rate
   SF = find_between_r(data_rate, "SF", "BW")
+  dbpath = "/opt/UNA/MQTT/BD/" + msg.dev_id + ".json"
+  db = TinyDB(dbpath)
+  Sensores = Query()
+  #print(dbpath)
   # Debugs
   #print('----------------------------')
   #print(gwid)

@@ -3,10 +3,11 @@
 
 from datetime import datetime, timedelta
 from tinydb import TinyDB, Query
-db = TinyDB('/opt/MQTT/sensores.json')
+dbpath = "/opt/UNA/MQTT/BD/sensor-01-humedad.json"
+db = TinyDB(dbpath)
 Sensores = Query()
 
-search=db.get(Sensores.dev_id == 'sensor-01-humedad')
+search=db.get(Sensores.dev_id == 'sensor-01-temperatura')
 
 def TTN2time(search):
     """

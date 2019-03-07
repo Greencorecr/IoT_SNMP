@@ -3,7 +3,8 @@
 
 from datetime import datetime, timedelta
 from tinydb import TinyDB, Query
-db = TinyDB('/opt/MQTT/sensores.json')
+dbpath = "/opt/UNA/MQTT/BD/sensor-05-caida.json"
+db = TinyDB(dbpath)
 Sensores = Query()
 
 search=db.get(Sensores.dev_id == 'sensor-05-caida')

@@ -1,12 +1,13 @@
 # Conector de TinyDB a SNMP
-# Temperatura y Humedad
+# Consumo Electrico
 
 from datetime import datetime, timedelta
 from tinydb import TinyDB, Query
-db = TinyDB('/opt/UNA/MQTT/sensores.json')
+dbpath = "/opt/MQTT/BD/sensor-04-consumo-01.json"
+db = TinyDB(dbpath)
 Sensores = Query()
 
-search=db.get(Sensores.dev_id == 'sensor-demo-humedad')
+search=db.get(Sensores.dev_id == 'sensor-04-consumo')
 
 def TTN2time(search):
     """
@@ -19,10 +20,12 @@ def TTN2time(search):
 timeTTN=TTN2time(search)
 timeFail=datetime.utcnow()
 # Debug
-#print (timeFail - timedelta(minutes=5), timeTTN)
+#print (timeFail - timedelta(minutes=10), timeTTN)
+    
+print('amp1')
 
-print('humedad')
-if (timeFail - timedelta(minutes=5) < timeTTN):
-    print(search.get("hum"))
+if (timeFail - timedelta(minutes=10) < timeTTN):
+    print(search.get("amp1"))
 else:
-    print("0")
+    # 2 - no se está recibiendo información reciente
+    print("-1")
