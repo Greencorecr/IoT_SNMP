@@ -45,7 +45,7 @@ sudo python2 -m pip install pyserial
 ```
 - Instalar DHT sensor library for ESPx by beegee_tokyo Version 1.0.9
 - Instalar U8g2 by oliver Version 2.25.10
-- Instalar [Arduino_SNMP](hhttps://github.com/fede2cr/Arduino_SNMP) en su carpera de liberías de Arduino, como puede ser ``Arduino/libraries/``
+- Instalar [Arduino_SNMP](https://github.com/fede2cr/Arduino_SNMP) en su carpera de liberías de Arduino, como puede ser ``Arduino/libraries/``
 
 ### Tarjetas/Boards
 
