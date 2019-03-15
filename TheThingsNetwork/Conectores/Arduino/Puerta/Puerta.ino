@@ -18,10 +18,12 @@
 
 #include "config.h"
 
+char* tipoStr;
+
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 WiFiUDP udp;
-SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
+SNMPAgent snmp = SNMPAgent("oos3Roh6lae2");  // Starts an SMMPAgent instance with the community string 'public'
 
 int changingNumber = 1;
 
@@ -48,7 +50,7 @@ Trigger puerta1 = {34, 0, false};
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
     puerta1.pressed = true;
-    Serial.println(puerta1.numberKeyPresses);
+    //Serial.println(puerta1.numberKeyPresses);
 }
 
 void logo(){
@@ -214,8 +216,15 @@ void setup() {
     snmp.setUDP(&udp);
     snmp.begin();
     changingNumber = int(puerta1.numberKeyPresses);
+
+    tipoStr = (char*)malloc(10);
+    memset(tipoStr, 0, 10);
+    String tipo = "puerta";
+    tipo.toCharArray(tipoStr, 10);
+    
     //changingNumberOID = snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &changingNumber);
-    snmp.addIntegerHandler(".1.3.6.1.4.1.4.0", &changingNumber);
+    snmp.addStringHandler(".1.3.6.1.4.1.4.0", &tipoStr);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.4.1", &changingNumber);
 
 
     // LMIC init
