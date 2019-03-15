@@ -23,7 +23,7 @@ char* tipoStr;
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 WiFiUDP udp;
-SNMPAgent snmp = SNMPAgent("oos3Roh6lae2");  // Starts an SMMPAgent instance with the community string 'public'
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'greencore'
 
 int changingNumber = 1;
 
