@@ -18,17 +18,21 @@
 
 #include "config.h"
 
+<<<<<<< HEAD
 #define COMPDATE __DATE__ __TIME__
 #define MODEBUTTON 0
 
 #include <IOTAppStory.h>
 IOTAppStory IAS(COMPDATE, MODEBUTTON);
 
+=======
+char* tipoStr;
+>>>>>>> 58a628e395ba3a43fa4ff4e9aef90d7f794750b4
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 WiFiUDP udp;
-SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'greencore'
 
 char* refreshDisplay = "5000";
 unsigned long lastRefresh;
@@ -55,6 +59,10 @@ Trigger puerta1 = {34, 0, false};
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
     puerta1.pressed = true;
+<<<<<<< HEAD
+=======
+    //Serial.println(puerta1.numberKeyPresses);
+>>>>>>> 58a628e395ba3a43fa4ff4e9aef90d7f794750b4
 }
 
 void logo(){
@@ -198,8 +206,15 @@ void setup() {
     snmp.setUDP(&udp);
     snmp.begin();
     changingNumber = int(puerta1.numberKeyPresses);
+
+    tipoStr = (char*)malloc(10);
+    memset(tipoStr, 0, 10);
+    String tipo = "puerta";
+    tipo.toCharArray(tipoStr, 10);
+    
     //changingNumberOID = snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &changingNumber);
-    snmp.addIntegerHandler(".1.3.6.1.4.1.4.0", &changingNumber);
+    snmp.addStringHandler(".1.3.6.1.4.1.4.0", &tipoStr);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.4.1", &changingNumber);
 
     // LMIC init
     os_init();
