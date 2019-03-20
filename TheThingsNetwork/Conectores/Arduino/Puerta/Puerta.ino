@@ -18,16 +18,23 @@
 
 #include "config.h"
 
+#define COMPDATE __DATE__ __TIME__
+#define MODEBUTTON 0
+
+#include <IOTAppStory.h>
+IOTAppStory IAS(COMPDATE, MODEBUTTON);
+
+
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 WiFiUDP udp;
 SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
 
-int changingNumber = 1;
+char* refreshDisplay = "5000";
+unsigned long lastRefresh;
 
-
-unsigned long previousMillis = 0;
-const long interval = 300000;
+int changingNumber = 0;
+int lastNumber = 0;
 unsigned int paqCont = 0;
 uint8_t mydata[] = "00000";
 
@@ -48,7 +55,6 @@ Trigger puerta1 = {34, 0, false};
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
     puerta1.pressed = true;
-    Serial.println(puerta1.numberKeyPresses);
 }
 
 void logo(){
@@ -62,14 +68,15 @@ void logo(){
 }
 
 void muestraDatos(){
-    char actString[10]; 
     // Muestra cantidad de activaciones (triggers) al activarse el sensor de puerta
+    char actString[10];
+    dtostrf(puerta1.numberKeyPresses,9,0,actString);
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB10_tr);
     u8g2.drawStr(15, 10, "Activaciones ");
-    dtostrf(puerta1.numberKeyPresses,9,0,actString);
     u8g2.drawStr(25, 40,actString);
+    u8g2.setFont(u8g2_font_ncenB08_tr);
     u8g2.sendBuffer();     
 }
 
@@ -112,8 +119,6 @@ void onEvent (ev_t ev) {
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
             Serial.println("Paquete enviado");
-            Serial.println("numberKeyPresses: ");
-            Serial.print(puerta1.numberKeyPresses);
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
@@ -124,7 +129,6 @@ void onEvent (ev_t ev) {
             os_setTimedCallback(&sendjob, os_getTime()+sec2osticks(TX_INTERVAL), do_send);
 
             // Muestra datos de activaciones/triggers
-            muestraDatos();
             break;
         case EV_LOST_TSYNC:
             Serial.println(F("EV_LOST_TSYNC"));
@@ -168,27 +172,7 @@ void do_send(osjob_t* j){
         }
     Serial.println(F("Paquete procesado"));
     Serial.println(LMIC.freq);
-
-    // LOGO
-    logo();
-    delay(1000); 
     
-    // INFORMACIÓN GENERAL
-    char frecString[10]; 
-    dtostrf(LMIC.freq/1000000.0,3,2,frecString);
-    char paqString[10]; 
-    dtostrf(paqCont,2,0,paqString);
-    u8g2.clearBuffer();
-    u8g2.clearDisplay();
-    u8g2.setFont(u8g2_font_ncenB08_tr);
-    u8g2.drawStr(0, 10, "Sensor Puerta");
-    u8g2.drawStr(0, 30, "Frecuencia: ");
-    u8g2.drawStr(68,30,frecString);
-    u8g2.drawStr(100,30," Mhz");
-    u8g2.drawStr(0,50,"Paquete: ");
-    u8g2.drawStr(50,50,paqString);
-    u8g2.sendBuffer();
-    delay(1000);
 
     
     // Contador de paquetes enviados a TTN
@@ -196,9 +180,13 @@ void do_send(osjob_t* j){
 }
 
 void setup() {
+    IAS.begin('P');
+    IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
+    IAS.setCallHomeInterval(86400);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
+    IAS.callHome(true);
+    IAS.addField(refreshDisplay, "RefreshDisplay(mS)", 5, 'N');
     pinMode(puerta1.PIN, INPUT_PULLUP);
     attachInterrupt(puerta1.PIN, isr, FALLING);
-    Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
     WiFi.setHostname(hostname);
@@ -207,16 +195,11 @@ void setup() {
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
     logo();
-    delay(5000);
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println(WiFi.localIP());
-    }
     snmp.setUDP(&udp);
     snmp.begin();
     changingNumber = int(puerta1.numberKeyPresses);
     //changingNumberOID = snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &changingNumber);
     snmp.addIntegerHandler(".1.3.6.1.4.1.4.0", &changingNumber);
-
 
     // LMIC init
     os_init();
@@ -245,7 +228,14 @@ void setup() {
 }
 
 void loop() {
+    IAS.loop();
     os_runloop_once();
-    changingNumber = int(puerta1.numberKeyPresses);
     snmp.loop();
+    changingNumber = int(puerta1.numberKeyPresses);
+    if ( (millis() - lastRefresh > atoi(refreshDisplay)) && (changingNumber != lastNumber) ) {
+      logo();
+      muestraDatos();
+      lastRefresh= millis();
+      lastNumber = changingNumber;
+    }
 }
