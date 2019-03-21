@@ -18,21 +18,18 @@
 
 #include "config.h"
 
-<<<<<<< HEAD
+#ifdef USE_IAS
 #define COMPDATE __DATE__ __TIME__
 #define MODEBUTTON 0
 
 #include <IOTAppStory.h>
 IOTAppStory IAS(COMPDATE, MODEBUTTON);
-
-=======
-char* tipoStr;
->>>>>>> 58a628e395ba3a43fa4ff4e9aef90d7f794750b4
+#endif
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 WiFiUDP udp;
-SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'greencore'
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
 
 char* refreshDisplay = "5000";
 unsigned long lastRefresh;
@@ -59,10 +56,6 @@ Trigger puerta1 = {34, 0, false};
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
     puerta1.pressed = true;
-<<<<<<< HEAD
-=======
-    //Serial.println(puerta1.numberKeyPresses);
->>>>>>> 58a628e395ba3a43fa4ff4e9aef90d7f794750b4
 }
 
 void logo(){
@@ -126,7 +119,6 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            Serial.println("Paquete enviado");
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
@@ -176,23 +168,20 @@ void do_send(osjob_t* j){
         Serial.println(F("OP_TXRXPEND, not sending"));
     } else {
            // Prepare upstream data transmission at the next possible time.
-           LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
-        }
-    Serial.println(F("Paquete procesado"));
-    Serial.println(LMIC.freq);
-    
-
-    
-    // Contador de paquetes enviados a TTN
-    paqCont++;  
+        LMIC_setTxData2(1, mydata, sizeof(mydata)-1, 0);
+    }
 }
 
 void setup() {
+    #ifdef USE_IAS
     IAS.begin('P');
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
     IAS.setCallHomeInterval(86400);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
     IAS.callHome(true);
     IAS.addField(refreshDisplay, "RefreshDisplay(mS)", 5, 'N');
+    #else
+    Serial.begin(115200);
+    #endif
     pinMode(puerta1.PIN, INPUT_PULLUP);
     attachInterrupt(puerta1.PIN, isr, FALLING);
     Serial.println(F("Starting"));
@@ -206,15 +195,8 @@ void setup() {
     snmp.setUDP(&udp);
     snmp.begin();
     changingNumber = int(puerta1.numberKeyPresses);
-
-    tipoStr = (char*)malloc(10);
-    memset(tipoStr, 0, 10);
-    String tipo = "puerta";
-    tipo.toCharArray(tipoStr, 10);
-    
     //changingNumberOID = snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &changingNumber);
-    snmp.addStringHandler(".1.3.6.1.4.1.4.0", &tipoStr);
-    snmp.addIntegerHandler(".1.3.6.1.4.1.4.1", &changingNumber);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.4.0", &changingNumber);
 
     // LMIC init
     os_init();
@@ -243,7 +225,9 @@ void setup() {
 }
 
 void loop() {
+    #ifdef USE_IAS
     IAS.loop();
+    #endif
     os_runloop_once();
     snmp.loop();
     changingNumber = int(puerta1.numberKeyPresses);
