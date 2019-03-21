@@ -1,9 +1,12 @@
 // Comment the next line to use ABP authentication on TTN. Leave it as it is to use recommended OTAA
 #define OTAA
 
+// Comment the next line if you plan NOT to use IoTAppStory's service
+#define USE_IAS
+
 #ifdef OTAA
 // Valores para autenticación OTAA
-static const u1_t PROGMEM DEVEUI[8]={ } ; // Device EUI, hex, lsb
+static const u1_t PROGMEM DEVEUI[8]={ }; // Device EUI, hex, lsb
 static const u1_t PROGMEM APPEUI[8]={ }; // Application EUI, hex, lsb
 static const u1_t PROGMEM APPKEY[16] = { }; // App Key, hex, msb
 
