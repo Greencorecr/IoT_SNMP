@@ -20,6 +20,14 @@
 
 #include "config.h"
 
+#ifdef USE_IAS
+#define COMPDATE __DATE__ __TIME__
+#define MODEBUTTON 0
+
+#include <IOTAppStory.h>
+IOTAppStory IAS(COMPDATE, MODEBUTTON);
+#endif
+
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 unsigned long previousMillis = 0;
@@ -204,7 +212,7 @@ void onEvent (ev_t ev) {
 void do_send(osjob_t* j){
     // LOGO
     logo();
-    delay(1000); // muestra el logo por 5 segundos  
+//    delay(1000); // muestra el logo por 5 segundos  
 
     unsigned long currentMillis = millis();
     
@@ -233,16 +241,24 @@ void do_send(osjob_t* j){
     u8g2.drawStr(0,50,"Paquete: ");
     u8g2.drawStr(50,50,paqString02);
     u8g2.sendBuffer();
-    delay(1000);
+    //delay(1000);
     paqCont++;
 
 }
 
 void setup() {
+    #ifdef USE_IAS
+    IAS.begin('P');
+    IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
+    IAS.setCallHomeInterval(300);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
+    IAS.callHome(true);
+    IAS.addField(refreshDisplay, "RefreshDisplay(mS)", 5, 'N');
+    #else
+    Serial.begin(115200);
+    #endif
     initTemp();
     // Signal end of setup() to tasks
     tasksEnabled = true;
-    Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
     WiFi.setHostname(hostname);
@@ -251,10 +267,7 @@ void setup() {
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
     logo();
-    delay(5000);
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println(WiFi.localIP());
-    }
+    //delay(5000);
 
     // LMIC init
     os_init();
@@ -273,10 +286,13 @@ void setup() {
       if (i != 10)
         LMIC_disableChannel(i);
     }
-
     #endif
 
     LMIC_setClockError(MAX_CLOCK_ERROR * 1 / 100);
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println(WiFi.localIP());
+    }
 
     // tipo de sensor
     mydata[0] = 0x08;
@@ -286,9 +302,12 @@ void setup() {
 }
 
 void loop() {
+  #ifdef USE_IAS
+  IAS.loop();
+  #endif
   if (!tasksEnabled) {
     // Wait 15 seconds to let system settle down
-    delay(15000);
+    //delay(15000);
     // Enable task that will read values from the DHT sensor
     tasksEnabled = true;
     if (tempTaskHandle != NULL) {
