@@ -2,13 +2,20 @@
 
 import time
 import ttn
-from tinydb import TinyDB, Query
-db = TinyDB('/opt/UNA/MQTT/sensores.json')
-Sensores = Query()
+from influxdb import InfluxDBClient
 
-      
-app_id = "sensores-demo" # En Overview, Application ID
-access_key = "ttn-account-v2..." # Access Keys
+app_id = "desarrollo-otaa" # En Overview, Application ID
+access_key = "ttn-account-v2.pxYC1mc7gUxXrGrED-_pxIXFgKQSdEBZGsfMM-CiIxk" # Access Keys
+
+host='localhost'
+port=8086
+user = 'root'
+password = 'root'
+dbname = 'sensores'
+dbuser = 'greencore'
+dbuser_password = 'my_secret_password'
+query = 'select Count from sensor;'
+influxclient = InfluxDBClient(host, port, user, password, dbname)
 
 def find_between_r( s, first, last ):
   try:
@@ -17,7 +24,6 @@ def find_between_r( s, first, last ):
       return s[start:end]
   except ValueError:
       return ""
-
 
 def uplink_callback(msg, client):
   payload = msg.payload_fields
@@ -29,10 +35,6 @@ def uplink_callback(msg, client):
   channel = gateways[0].channel
   data_rate = metadata.data_rate
   SF = find_between_r(data_rate, "SF", "BW")
-  dbpath = "/opt/UNA/MQTT/BD/" + msg.dev_id + ".json"
-  db = TinyDB(dbpath)
-  Sensores = Query()
-  #print(dbpath)
   # Debugs
   #print('----------------------------')
   #print(gwid)
@@ -44,98 +46,142 @@ def uplink_callback(msg, client):
   #print(msg)
   #print(payload, metadata)
   #print('----------------------------')
-#----------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------
-  # Valida que solo reciba datos del gateway gateway-demo
-  #if gwid == 'gateway-demo':
+
   if payload.tipo == 'amps':
-      print ('--------------------------------------')
-      print('CONSUMO')
-      print ('--------------------------------------')
-      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'amp1': payload.amp1, 'amp2': payload.amp2, 'amp3': payload.amp3, 'amp4': payload.amp4}, Sensores.dev_id == msg.dev_id)
-      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'amp1:', payload.amp1, 'amp2:', payload.amp2, 'amp3:', payload.amp3, 'amp4:', payload.amp4)
-  #----------------------------------------------------------------------------------------------------
-  #----------------------------------------------------------------------------------------------------
+      if __debug__:
+          print('Consumo - SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'amp1:', payload.amp1, 'amp2:', payload.amp2, 'amp3:', payload.amp3, 'amp4:', payload.amp4)
+      json_body = [
+          {
+              "measurement": "sensoramps",
+              "tags": {
+                  "dev_id": msg.dev_id,
+                  "type": payload.tipo
+              },
+              "time": metadata.time[0:19] + "Z",
+              "fields": {
+                  "Amp1": float(payload.amp1),
+                  "Amp2": float(payload.amp2),
+                  "Amp3": float(payload.amp3),
+                  "Amp4": float(payload.amp4),
+                  "SF": int(SF),
+                  "channel": channel,
+                  "rssi": float(rssi),
+                  "snr": float(snr),
+              }
+          }
+      ]
+      try:
+          influxclient.write_points(json_body)
+      except:
+          print("Write points: {0}".format(json_body))
+          print ("Error: paquete con error")
   elif payload.tipo == 'caida':
-      print ('--------------------------------------')
-      print('CAIDA')
-      print ('--------------------------------------')
-      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'caida': payload.caida}, Sensores.dev_id == msg.dev_id)
-      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'caida:', payload.caida)
-  #----------------------------------------------------------------------------------------------------
-  #----------------------------------------------------------------------------------------------------
+      json_body = [
+          {
+              "measurement": "sensorcaida",
+              "tags": {
+                  "dev_id": msg.dev_id,
+                  "type": payload.tipo
+              },
+              "time": metadata.time[0:19] + "Z",
+              "fields": {
+                  "Caida": payload.caida,
+                  "SF": int(SF),
+                  "channel": channel,
+                  "rssi": float(rssi),
+                  "snr": float(snr),
+              }
+          }
+      ]
+      try:
+          influxclient.write_points(json_body)
+      except:
+          print("Write points: {0}".format(json_body))
+          print ("Error: paquete con error")
+      if __debug__:
+          print('Caida   - SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'caida:', payload.caida)
   elif payload.tipo == 'gotas':
-      print ('--------------------------------------')
-      print('GOTAS')
-      print ('--------------------------------------')
-      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'gotas': payload.gotas, 'triggs': payload.triggs}, Sensores.dev_id == msg.dev_id)
-      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'gotas:', payload.gotas, 'triggs:', payload.triggs)
-  #----------------------------------------------------------------------------------------------------
-  #----------------------------------------------------------------------------------------------------
+      json_body = [
+          {
+              "measurement": "sensorgotas",
+              "tags": {
+                  "dev_id": msg.dev_id,
+                  "type": payload.tipo
+              },
+              "time": metadata.time[0:19] + "Z",
+              "fields": {
+                  "Gotas": payload.gotas,
+                  "SF": int(SF),
+                  "channel": channel,
+                  "rssi": float(rssi),
+                  "snr": float(snr),
+              }
+          }
+      ]
+      try:
+          influxclient.write_points(json_body)
+      except:
+          print("Write points: {0}".format(json_body))
+          print ("Error: paquete con error")
+      if __debug__:
+          print('Gotas   - SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'gotas:', payload.gotas, 'triggs:', payload.triggs)
   elif payload.tipo == 'temphum':
-      print ('--------------------------------------')
-      print('HUMEDAD')
-      print ('--------------------------------------')
-      db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'temp': payload.temp, 'hum': payload.hum}, Sensores.dev_id == msg.dev_id)
-      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'temp:', payload.temp, 'hum:', payload.hum)
-
-  #----------------------------------------------------------------------------------------------------
-  #----------------------------------------------------------------------------------------------------
+      json_body = [
+          {
+              "measurement": "sensortemphum",
+              "tags": {
+                  "dev_id": msg.dev_id,
+                  "type": payload.tipo
+              },
+              "time": metadata.time[0:19] + "Z",
+              "fields": {
+                  "Temp": float(payload.temp),
+                  "Hum": float(payload.hum),
+                  "SF": int(SF),
+                  "channel": channel,
+                  "rssi": float(rssi),
+                  "snr": float(snr),
+              }
+          }
+      ]
+      try:
+          influxclient.write_points(json_body)
+      except:
+          print("Write points: {0}".format(json_body))
+          print ("Error: paquete con error")
+      if __debug__:
+          print('Temphum - SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'temp:', payload.temp, 'hum:', payload.hum)
   elif payload.tipo == 'puerta':
-      print ('--------------------------------------')
-      print('PUERTA')
-      print ('--------------------------------------')
-
-      search = db.get(Sensores.dev_id == 'dev_id_puerta')
-      anterior = search.get("triggs_anterior")
-      actual = payload.triggs
-
-      # Debugs
-      #print(anterior)
-      #print(actual)
-      #print('---')
-
-      #Se reseteo el sensor, inicia en 0
-      if actual == 0:
-          #print('if 0')
-          #print(anterior)
-          #print(actual)
-          estado = 0
-          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': 0, 'triggs_anterior': 0, 'triggs': 0}, Sensores.dev_id == msg.dev_id)
-
-      #No ha variado el dato, la puerta continua cerrada
-      elif actual == anterior:
-          #print('if ==')
-          #print(anterior)
-          #print(actual)
-          estado = 0
-          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': anterior, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
-
-      # Aumento el conteo, la puerta se abrio
-      elif actual > anterior:
-          #print('if >')
-          #print(anterior)
-          #print(actual)
-          estado = 1
-          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': actual, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
-
-      # Si el valor anterior es mayor que el actual, significa que la base de datos se desactualizó, se fuerza sincronizacion.
-      else:
-          #print('if <')
-          #print(actual)
-          #print(anterior)
-          estado = 1
-          db.upsert({'SF': SF, 'channel': channel, 'rssi': rssi, 'snr': snr, 'dev_id': msg.dev_id, 'time': metadata.time, 'estado': estado, 'triggs_anterior': actual, 'triggs': actual}, Sensores.dev_id == msg.dev_id)
-      print('SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'estado:', estado, 'triggs_anterior:', actual, 'triggs:', actual)
-
-
-  #----------------------------------------------------------------------------------------------------
-  #----------------------------------------------------------------------------------------------------
+      json_body = [
+          {
+              "measurement": "sensorpuerta",
+              "tags": {
+                  "dev_id": msg.dev_id,
+                  "type": payload.tipo
+              },
+              "time": metadata.time[0:19] + "Z",
+              "fields": {
+                  "Open": payload.Open,
+                  "Count": payload.Count,
+                  "SF": int(SF),
+                  "channel": channel,
+                  "rssi": float(rssi),
+                  "snr": float(snr),
+              }
+          }
+      ]
+      try:
+          influxclient.write_points(json_body)
+      except:
+          print("Write points: {0}".format(json_body))
+          print ("Error: paquete con error")
+      if __debug__:
+          print('Puerta  - SF:', SF, 'channel:', channel, 'rssi:', rssi, 'snr:', snr, 'dev_id:', msg.dev_id, 'time:', metadata.time, 'Open:', payload.Open, 'Count:', payload.Count)
   else:
-      print('Tipo no encontrado')
-      print(payload.tipo)
-  #else:
-  #    print('Paquete ignorado, gateway incorrecto')
+      if __debug__:
+          print('Tipo no encontrado' + payload.tipo)
+
+
 
 handler = ttn.HandlerClient(app_id, access_key)
 
