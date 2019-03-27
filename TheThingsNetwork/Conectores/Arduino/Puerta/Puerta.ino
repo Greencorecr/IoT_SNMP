@@ -32,17 +32,24 @@ WiFiUDP udp;
 SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
 
 char* refreshDisplay = "5000";
-unsigned long lastRefresh;
+unsigned long lastDisplayRefresh;
 
-int changingNumber = 0;
+int snmpDoorCount = 0;
+int snmpDoorOpen = 0;
 int lastNumber = 0;
-unsigned int paqCont = 0;
-uint8_t mydata[] = "00000";
-
-TaskHandle_t tempTaskHandle = NULL;
-
+uint8_t mydata[] = "0000";
 
 static osjob_t sendjob;
+
+#define DoorPin 34
+int doorState = 0;
+int lastDoorState = 0;
+bool doorOpen = 0;
+//int reading = LOW;
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+const unsigned long debounceDelay = 100;
+
+int doorCount, lastDoorCount = 0;
 
 struct Trigger {
     const uint8_t PIN;
@@ -50,12 +57,13 @@ struct Trigger {
     bool pressed;
 };
 
-
 Trigger puerta1 = {34, 0, false};
 
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
-    puerta1.pressed = true;
+    puerta1.pressed = !puerta1.pressed;
+//        puerta1.pressed = true;
+
 }
 
 void logo(){
@@ -68,10 +76,10 @@ void logo(){
     u8g2.sendBuffer();
 }
 
-void muestraDatos(){
+void muestraDatos(int doorCount){
     // Muestra cantidad de activaciones (triggers) al activarse el sensor de puerta
     char actString[10];
-    dtostrf(puerta1.numberKeyPresses,9,0,actString);
+    dtostrf(doorCount,9,0,actString);
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB10_tr);
@@ -154,14 +162,15 @@ void onEvent (ev_t ev) {
 
 
 void do_send(osjob_t* j){
-
-    mydata[1] = ( puerta1.numberKeyPresses >> 24 ) & 0xFF;
-    mydata[2] = ( puerta1.numberKeyPresses >> 16 ) & 0xFF;
-    mydata[3] = ( puerta1.numberKeyPresses >> 8 ) & 0xFF;
-    mydata[4] = puerta1.numberKeyPresses & 0xFF;
+  if (doorOpen) {
+    mydata[1] = 0x1;
+  } else {
+    mydata[1] = 0x0;
+  }
+    mydata[2] = lowByte(doorCount);
+    mydata[3] = highByte(doorCount);
     
     unsigned long currentMillis = millis();
-
 
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
@@ -173,31 +182,30 @@ void do_send(osjob_t* j){
 }
 
 void setup() {
+    u8g2.begin();
+    logo();
     #ifdef USE_IAS
     IAS.begin('P');
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
-    IAS.setCallHomeInterval(86400);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
+    IAS.setCallHomeInterval(300);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
     IAS.callHome(true);
     IAS.addField(refreshDisplay, "RefreshDisplay(mS)", 5, 'N');
     #else
     Serial.begin(115200);
     #endif
+//    pinMode(DoorPin, INPUT_PULLUP);
     pinMode(puerta1.PIN, INPUT_PULLUP);
-    attachInterrupt(puerta1.PIN, isr, FALLING);
+    attachInterrupt(digitalPinToInterrupt(puerta1.PIN), isr, CHANGE);
     Serial.println(F("Starting"));
-    u8g2.begin();
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
-    logo();
     snmp.setUDP(&udp);
     snmp.begin();
-    changingNumber = int(puerta1.numberKeyPresses);
-    //changingNumberOID = snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &changingNumber);
-    snmp.addIntegerHandler(".1.3.6.1.4.1.4.0", &changingNumber);
-
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &snmpDoorCount);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.1", &snmpDoorOpen);
     // LMIC init
     os_init();
     // Reset the MAC state. Session and pending data transfers will be discarded.
@@ -225,16 +233,46 @@ void setup() {
 }
 
 void loop() {
-    #ifdef USE_IAS
-    IAS.loop();
-    #endif
-    os_runloop_once();
-    snmp.loop();
-    changingNumber = int(puerta1.numberKeyPresses);
-    if ( (millis() - lastRefresh > atoi(refreshDisplay)) && (changingNumber != lastNumber) ) {
-      logo();
-      muestraDatos();
-      lastRefresh= millis();
-      lastNumber = changingNumber;
+  #ifdef USE_IAS
+  IAS.loop();
+  #endif
+  os_runloop_once();
+  snmpDoorCount = doorCount;
+  snmp.loop();
+  
+  if (puerta1.numberKeyPresses != lastDoorState) {
+    // reset the debouncing timer
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (puerta1.numberKeyPresses != doorState) {
+      doorState = puerta1.numberKeyPresses;
+      doorCount += 1;
     }
+  }
+
+  //Serial.println(puerta1.pressed);
+
+   lastDoorState = puerta1.numberKeyPresses;
+   if (puerta1.pressed == 1) { 
+      doorOpen = true;
+      snmpDoorOpen = 1;
+   } else { 
+      doorOpen = false;
+      snmpDoorOpen = 0;
+   }
+
+  if (millis() - lastDisplayRefresh > atoi(refreshDisplay)) {
+  
+    if (doorCount != lastDoorCount) {
+      logo();
+      muestraDatos(doorCount);
+      lastDisplayRefresh = millis();
+      lastDoorCount = doorCount;
+      puerta1.pressed = false;
+
+    } 
+  }
+
 }
