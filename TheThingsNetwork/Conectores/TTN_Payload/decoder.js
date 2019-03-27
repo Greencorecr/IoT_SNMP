@@ -27,11 +27,11 @@ function Decoder(bytes, port) {
       decoded.tipo = "temphum";
       decoded.temp = (bytes[1] << 8)    + bytes[2];
       decoded.hum = (bytes[3] << 8)    + bytes[4];
-
       break;
     case 0x16:
       decoded.tipo = "puerta";
-      decoded.triggs = (bytes[1] << 24) + (bytes[2] << 16)+ (bytes[3] << 8) + bytes[4];
+      decoded.Open = bytes[1];
+      decoded.Count =  (bytes[3] << 8) + bytes[2];
       break;
   }
   return decoded;
