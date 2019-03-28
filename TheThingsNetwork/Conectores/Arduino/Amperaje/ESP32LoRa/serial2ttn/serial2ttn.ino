@@ -19,6 +19,14 @@
 
 #include "config.h"
 
+#ifdef USE_IAS
+#define COMPDATE __DATE__ __TIME__
+#define MODEBUTTON 0
+
+#include <IOTAppStory.h>
+IOTAppStory IAS(COMPDATE, MODEBUTTON);
+#endif
+
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 unsigned long previousMillis = 0;
@@ -115,7 +123,7 @@ void do_send(osjob_t* j){
     String sensorData[4] = "0000";
     // LOGO
     logo();
-    delay(1000); // muestra el logo por 5 segundos  
+    //delay(1000); // muestra el logo por 5 segundos  
 
     // TODO: Mover a funcion
     while (Serial2.available()) {
@@ -229,8 +237,15 @@ void do_send(osjob_t* j){
 }
 
 void setup() {
-    Serial2.begin(115200); // Desde Arduino-Nano
+    #ifdef USE_IAS
+    IAS.begin('P');
+    IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
+    IAS.setCallHomeInterval(300);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
+    IAS.callHome(true);
+    #else
     Serial.begin(115200);
+    #endif
+    Serial2.begin(115200); // Desde Arduino-Nano
     Serial.println(F("Starting"));
     u8g2.begin();
     WiFi.setHostname(hostname);
@@ -239,7 +254,7 @@ void setup() {
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
     logo();
-    delay(5000);
+    //delay(5000);
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
@@ -269,5 +284,9 @@ void setup() {
 }
 
 void loop() {
+  #ifdef USE_IAS
+  IAS.loop();
+  #endif
   os_runloop_once();
+  
 }

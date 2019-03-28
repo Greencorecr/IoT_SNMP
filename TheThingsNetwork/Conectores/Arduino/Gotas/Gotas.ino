@@ -18,6 +18,14 @@
 
 #include "config.h"
 
+#ifdef USE_IAS
+#define COMPDATE __DATE__ __TIME__
+#define MODEBUTTON 0
+
+#include <IOTAppStory.h>
+IOTAppStory IAS(COMPDATE, MODEBUTTON);
+#endif
+
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
 
 unsigned long previousMillis = 0;
@@ -163,7 +171,7 @@ void do_send(osjob_t* j){
 
     // LOGO
     logo();
-    delay(1000); // muestra el logo por 2 segundos 
+    //delay(1000); // muestra el logo por 2 segundos 
 
     // INFORMACIÓN GENERAL
     char frecString[10]; 
@@ -180,16 +188,23 @@ void do_send(osjob_t* j){
     u8g2.drawStr(0,50,"Paquete: ");
     u8g2.drawStr(50,50,paqString);
     u8g2.sendBuffer();
-    delay(1000);
+    //delay(1000);
 
     // Contador de paquetes enviados a TTN
     paqCont++;
 }
 
 void setup() {
+    #ifdef USE_IAS
+    IAS.begin('P');
+    IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
+    IAS.setCallHomeInterval(300);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
+    IAS.callHome(true);
+    #else
+    Serial.begin(115200);
+    #endif
     pinMode(goteo1.PIN, INPUT_PULLUP);
     attachInterrupt(goteo1.PIN, isr, FALLING);
-    Serial.begin(115200);
     Serial.println(F("Starting"));
     u8g2.begin();
     u8g2.setFont(u8x8_font_chroma48medium8_r);
@@ -200,7 +215,7 @@ void setup() {
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
     logo();
-    delay(5000);
+    //delay(5000);
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
@@ -226,5 +241,8 @@ void setup() {
 }
 
 void loop() {
-    os_runloop_once();
+  #ifdef USE_IAS
+  IAS.loop();
+  #endif
+  os_runloop_once();
 }

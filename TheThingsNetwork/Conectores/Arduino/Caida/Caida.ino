@@ -17,6 +17,14 @@
 
 #include "config.h"
 
+#ifdef USE_IAS
+#define COMPDATE __DATE__ __TIME__
+#define MODEBUTTON 0
+
+#include <IOTAppStory.h>
+IOTAppStory IAS(COMPDATE, MODEBUTTON);
+#endif
+
 const int analogInPin = 36;  // Analog input pin that the potentiometer is attached to
 int sensorValue = 0;        // value read from the pot
 
@@ -154,12 +162,12 @@ void do_send(osjob_t* j){
 
     // LOGO
     logo();
-    delay(1000);
+    //delay(1000);
   
     // Se llama funcion de revision antes de alistar paquete
     revisarEstado();
     mydata[1] = estado;
-
+    
     // Check if there is not a current TX/RX job running
     if (LMIC.opmode & OP_TXRXPEND) {
         Serial.println(F("OP_TXRXPEND, not sending"));
@@ -186,13 +194,21 @@ void do_send(osjob_t* j){
     u8g2.drawStr(0,50,"Paquete: ");
     u8g2.drawStr(50,50,paqString);
     u8g2.sendBuffer();
-    delay(1000);
+    //delay(1000);
      
     paqCont++;
 }
 
 void setup() {
+    #ifdef USE_IAS
+    IAS.begin('P');
+    IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
+    IAS.setCallHomeInterval(300);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
+    IAS.callHome(true);
+    IAS.addField(refreshDisplay, "RefreshDisplay(mS)", 5, 'N');
+    #else
     Serial.begin(115200);
+    #endif
     Serial.println(F("Starting"));
     u8g2.begin();
     WiFi.setHostname(hostname);
@@ -201,7 +217,7 @@ void setup() {
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
     logo();
-    delay(5000);
+    //delay(5000);
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
@@ -235,5 +251,8 @@ void setup() {
 }
 
 void loop() {
+  #ifdef USE_IAS
+  IAS.loop();
+  #endif
   os_runloop_once();
 }
