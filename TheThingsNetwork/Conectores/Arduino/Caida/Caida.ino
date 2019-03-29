@@ -205,7 +205,6 @@ void setup() {
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
     IAS.setCallHomeInterval(300);            // Call home interval in seconds, use 60s only for development. Please change it to at least 2 hours in production
     IAS.callHome(true);
-    IAS.addField(refreshDisplay, "RefreshDisplay(mS)", 5, 'N');
     #else
     Serial.begin(115200);
     #endif
