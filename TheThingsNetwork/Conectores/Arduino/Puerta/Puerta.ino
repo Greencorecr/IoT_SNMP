@@ -61,8 +61,8 @@ Trigger puerta1 = {34, 0, false};
 
 void IRAM_ATTR isr() {
     puerta1.numberKeyPresses += 1;
-    puerta1.pressed = !puerta1.pressed;
-//        puerta1.pressed = true;
+//    puerta1.pressed = !puerta1.pressed;
+    puerta1.pressed = true;
 
 }
 
@@ -249,10 +249,14 @@ void loop() {
     if (puerta1.numberKeyPresses != doorState) {
       doorState = puerta1.numberKeyPresses;
       doorCount += 1;
+      puerta1.pressed = false;
     }
   }
 
-  //Serial.println(puerta1.pressed);
+  Serial.print("puerta.pressed");
+  Serial.println(puerta1.pressed);
+  Serial.print("digitalRead");
+  Serial.println(digitalRead(34));
 
    lastDoorState = puerta1.numberKeyPresses;
    if (puerta1.pressed == 1) { 
@@ -270,7 +274,7 @@ void loop() {
       muestraDatos(doorCount);
       lastDisplayRefresh = millis();
       lastDoorCount = doorCount;
-      puerta1.pressed = false;
+//      puerta1.pressed = false;
 
     } 
   }
