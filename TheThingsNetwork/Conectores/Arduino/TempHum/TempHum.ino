@@ -17,6 +17,9 @@
 #include<Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <WiFiUdp.h>
+#include <Arduino_SNMP.h>
+
 
 #include "config.h"
 
@@ -29,6 +32,13 @@ IOTAppStory IAS(COMPDATE, MODEBUTTON);
 #endif
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
+
+WiFiUDP udp;
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
+
+int snmpTemp = 0;
+int snmpHum = 0;
+
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -137,6 +147,9 @@ bool getTemperature() {
   mydata[3] = highByte((int) newValues.humidity);
   mydata[4] = lowByte((int) newValues.humidity);
 
+  snmpTemp = newValues.temperature;
+  snmpHum = newValues.humidity;
+
   return true;
 }
 
@@ -212,7 +225,6 @@ void onEvent (ev_t ev) {
 void do_send(osjob_t* j){
     // LOGO
     logo();
-//    delay(1000); // muestra el logo por 5 segundos  
 
     unsigned long currentMillis = millis();
     
@@ -241,12 +253,13 @@ void do_send(osjob_t* j){
     u8g2.drawStr(0,50,"Paquete: ");
     u8g2.drawStr(50,50,paqString02);
     u8g2.sendBuffer();
-    //delay(1000);
     paqCont++;
 
 }
 
 void setup() {
+    u8g2.begin();
+    logo();
     #ifdef USE_IAS
     IAS.begin('P');
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
@@ -259,14 +272,15 @@ void setup() {
     // Signal end of setup() to tasks
     tasksEnabled = true;
     Serial.println(F("Starting"));
-    u8g2.begin();
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
-    logo();
-    //delay(5000);
+    snmp.setUDP(&udp);
+    snmp.begin();
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &snmpTemp);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.1", &snmpHum);
 
     // LMIC init
     os_init();
@@ -314,4 +328,5 @@ void loop() {
     }
   }
   os_runloop_once();
+  snmp.loop();
 }
