@@ -15,6 +15,9 @@
 #include<U8g2lib.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <WiFiUdp.h>
+#include <Arduino_SNMP.h>
+
 
 #include "config.h"
 
@@ -27,6 +30,10 @@ IOTAppStory IAS(COMPDATE, MODEBUTTON);
 #endif
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
+
+WiFiUDP udp;
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
+int snmpGotas = 0;
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -168,33 +175,12 @@ void do_send(osjob_t* j){
         }
     Serial.println(F("Pqaquete procesado"));
     Serial.println(LMIC.freq);
-
-    // LOGO
-    logo();
-    //delay(1000); // muestra el logo por 2 segundos 
-
-    // INFORMACIÓN GENERAL
-    char frecString[10]; 
-    dtostrf(LMIC.freq/1000000.0,3,2,frecString);
-    char paqString[10]; 
-    dtostrf(paqCont,2,0,paqString);
-    u8g2.clearBuffer();
-    u8g2.clearDisplay();
-    u8g2.setFont(u8g2_font_ncenB08_tr);
-    u8g2.drawStr(0, 10, "Sensor Gotas");
-    u8g2.drawStr(0, 30, "Frecuencia: ");
-    u8g2.drawStr(68,30,frecString);
-    u8g2.drawStr(100,30," Mhz");
-    u8g2.drawStr(0,50,"Paquete: ");
-    u8g2.drawStr(50,50,paqString);
-    u8g2.sendBuffer();
-    //delay(1000);
-
-    // Contador de paquetes enviados a TTN
-    paqCont++;
 }
 
 void setup() {
+    u8g2.begin();
+    u8g2.setFont(u8x8_font_chroma48medium8_r);
+    logo();
     #ifdef USE_IAS
     IAS.begin('P');
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
@@ -206,16 +192,16 @@ void setup() {
     pinMode(goteo1.PIN, INPUT_PULLUP);
     attachInterrupt(goteo1.PIN, isr, FALLING);
     Serial.println(F("Starting"));
-    u8g2.begin();
-    u8g2.setFont(u8x8_font_chroma48medium8_r);
 
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
-    logo();
-    //delay(5000);
+    snmp.setUDP(&udp);
+    snmp.begin();
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &snmpGotas);
+
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
@@ -245,4 +231,6 @@ void loop() {
   IAS.loop();
   #endif
   os_runloop_once();
+  snmpGotas = int(goteo1.numberKeyPresses);
+  snmp.loop();
 }
