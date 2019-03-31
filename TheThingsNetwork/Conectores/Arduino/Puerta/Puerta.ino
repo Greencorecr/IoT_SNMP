@@ -246,17 +246,17 @@ void loop() {
   }
 
   if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (puerta1.numberKeyPresses != doorState) {
-      doorState = puerta1.numberKeyPresses;
+    if (puerta1.pressed != doorState) {
+      doorState = puerta1.pressed;
       doorCount += 1;
       puerta1.pressed = false;
     }
   }
 
-  Serial.print("puerta.pressed");
-  Serial.println(puerta1.pressed);
-  Serial.print("digitalRead");
-  Serial.println(digitalRead(34));
+ // Serial.print("puerta.pressed");
+ // Serial.println(puerta1.pressed);
+//  Serial.print("digitalRead");
+//  Serial.println(digitalRead(34));
 
    lastDoorState = puerta1.numberKeyPresses;
    if (puerta1.pressed == 1) { 
@@ -274,8 +274,6 @@ void loop() {
       muestraDatos(doorCount);
       lastDisplayRefresh = millis();
       lastDoorCount = doorCount;
-//      puerta1.pressed = false;
-
     } 
   }
 
