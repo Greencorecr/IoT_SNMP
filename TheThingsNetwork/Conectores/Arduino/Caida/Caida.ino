@@ -14,6 +14,9 @@
 #include<U8g2lib.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <WiFiUdp.h>
+#include <Arduino_SNMP.h>
+
 
 #include "config.h"
 
@@ -29,6 +32,9 @@ const int analogInPin = 36;  // Analog input pin that the potentiometer is attac
 int sensorValue = 0;        // value read from the pot
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
+
+WiFiUDP udp;
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -65,21 +71,16 @@ void revisarEstado(){
 
 void muestraDatos(){
     // Se llama funcion de revision
-    revisarEstado();
     u8g2.clearBuffer();
     u8g2.clearDisplay();
     u8g2.setFont(u8g2_font_ncenB10_tr);
-    u8g2.drawStr(40, 15, "Estado");
-
     char estadoString[2]; 
     dtostrf(estado,2,0,estadoString);
     u8g2.setFont(u8g2_font_ncenB08_tr);
     if (estado == 0){
-      u8g2.drawStr(62, 30,estadoString);
       u8g2.drawStr(15, 50,"Si hay electricidad");
     }
     else {
-      u8g2.drawStr(62, 30,estadoString);
       u8g2.drawStr(15, 50,"No hay electricidad");
     }
     u8g2.sendBuffer(); 
@@ -120,10 +121,6 @@ void onEvent (ev_t ev) {
             break;
         case EV_TXCOMPLETE:
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            Serial.println("estado: ");
-            Serial.println(estado);
-            Serial.println("sensorValue: ");
-            Serial.println(sensorValue);
             if(LMIC.dataLen) {
                 // data received in rx slot after tx
                 Serial.print(F("Data Received: "));
@@ -162,8 +159,7 @@ void do_send(osjob_t* j){
 
     // LOGO
     logo();
-    //delay(1000);
-  
+      
     // Se llama funcion de revision antes de alistar paquete
     revisarEstado();
     mydata[1] = estado;
@@ -200,6 +196,8 @@ void do_send(osjob_t* j){
 }
 
 void setup() {
+    u8g2.begin();
+    logo();
     #ifdef USE_IAS
     IAS.begin('P');
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
@@ -209,18 +207,18 @@ void setup() {
     Serial.begin(115200);
     #endif
     Serial.println(F("Starting"));
-    u8g2.begin();
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
-    logo();
-    //delay(5000);
+    snmp.setUDP(&udp);
+    snmp.begin();
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &estado);
+
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
-
     // LMIC init
     os_init();
     // Reset the MAC state. Session and pending data transfers will be discarded.
@@ -254,4 +252,6 @@ void loop() {
   IAS.loop();
   #endif
   os_runloop_once();
+  revisarEstado();
+  snmp.loop();
 }
