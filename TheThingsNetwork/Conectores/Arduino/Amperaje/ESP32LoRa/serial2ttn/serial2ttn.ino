@@ -16,6 +16,8 @@
 #include<Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <WiFiUdp.h>
+#include <Arduino_SNMP.h>
 
 #include "config.h"
 
@@ -28,6 +30,13 @@ IOTAppStory IAS(COMPDATE, MODEBUTTON);
 #endif
 
 U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16); 
+
+WiFiUDP udp;
+SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
+int snmpAmp1 = 0;
+int snmpAmp2 = 0;
+int snmpAmp3 = 0;
+int snmpAmp4 = 0;
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -121,9 +130,6 @@ void onEvent (ev_t ev) {
 void do_send(osjob_t* j){
     unsigned int sensorCount = 0;
     String sensorData[4] = "0000";
-    // LOGO
-    logo();
-    //delay(1000); // muestra el logo por 5 segundos  
 
     // TODO: Mover a funcion
     while (Serial2.available()) {
@@ -237,6 +243,8 @@ void do_send(osjob_t* j){
 }
 
 void setup() {
+    u8g2.begin();
+    logo();
     #ifdef USE_IAS
     IAS.begin('P');
     IAS.setCallHome(true);                  // Set to true to enable calling home frequently (disabled by default)
@@ -247,14 +255,18 @@ void setup() {
     #endif
     Serial2.begin(115200); // Desde Arduino-Nano
     Serial.println(F("Starting"));
-    u8g2.begin();
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
-    logo();
-    //delay(5000);
+    snmp.setUDP(&udp);
+    snmp.begin();
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.0", &snmpAmp1);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.1", &snmpAmp2);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.2", &snmpAmp3);
+    snmp.addIntegerHandler(".1.3.6.1.4.1.5.3", &snmpAmp4);
+
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
     }
@@ -288,5 +300,5 @@ void loop() {
   IAS.loop();
   #endif
   os_runloop_once();
-  
+  snmp.loop();
 }
