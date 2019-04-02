@@ -4,8 +4,8 @@ import time
 import ttn
 from influxdb import InfluxDBClient
 
-app_id = "desarrollo-otaa" # En Overview, Application ID
-access_key = "ttn-account-v2.pxYC1mc7gUxXrGrED-_pxIXFgKQSdEBZGsfMM-CiIxk" # Access Keys
+app_id = "app_id" # En Overview, Application ID
+access_key = "ttn-account-v2..." # Access Keys
 
 host='localhost'
 port=8086
