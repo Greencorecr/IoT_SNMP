@@ -39,8 +39,7 @@ timeTTN = datetime.strptime(result[0]['time'][0:10] + " " + result[0]['time'][11
 timeFail=datetime.utcnow()
 
 print('humedad')
-#if (timeFail - timedelta(minutes=5) < timeTTN):
-if (timeFail - timedelta(minutes=0) < timeTTN):
+if (timeFail - timedelta(minutes=5) < timeTTN):
     print(hum)
 else:
     try:
