@@ -3,6 +3,15 @@
 
 from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
+from pysnmp.hlapi import *
+
+errorIndication, errorStatus, errorIndex, varBinds = next(
+    getCmd(SnmpEngine(),
+           CommunityData('greencore', mpModel=0),
+           UdpTransportTarget(('10.42.22.108', 161)),
+           ContextData(),
+           ObjectType(ObjectIdentity('1.3.6.1.4.1.5.0')))
+)
 
 def TTN2time(search):
     """
@@ -28,12 +37,28 @@ timeTTN = datetime.strptime(result[0]['time'][0:10] + " " + result[0]['time'][11
 
 # Medimos el tiempo según TTN, el tiempo de hace 5 minutos. Si no hemos recibido datos, el sensor responde "0"
 timeFail=datetime.utcnow()
-# Debug
-#print(hum, timeTTN)
-#print (timeFail - timedelta(minutes=5), timeTTN)
 
 print('humedad')
-if (timeFail - timedelta(minutes=5) < timeTTN):
+#if (timeFail - timedelta(minutes=5) < timeTTN):
+if (timeFail - timedelta(minutes=0) < timeTTN):
     print(hum)
 else:
-    print("0")
+    try:
+        errorIndication, errorStatus, errorIndex, varBinds = next(
+           getCmd(SnmpEngine(),
+           CommunityData('greencore', mpModel=0),
+           UdpTransportTarget(('10.42.22.182', 161)),
+           ContextData(),
+           ObjectType(ObjectIdentity('1.3.6.1.4.1.5.0')))
+        )
+        if errorIndication:
+            print("Error: " + errorIndication)
+        elif errorStatus:
+            print('%s at %s' % (errorStatus.prettyPrint(),
+                                errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
+        else:
+            snmpdata = str(varBinds[0]).split("= ")
+            print(snmpdata[1])
+
+    except:
+        print("-1")
