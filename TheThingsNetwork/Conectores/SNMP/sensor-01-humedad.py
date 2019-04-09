@@ -5,50 +5,53 @@ from datetime import datetime, timedelta
 from influxdb import InfluxDBClient
 from pysnmp.hlapi import *
 
-errorIndication, errorStatus, errorIndex, varBinds = next(
-    getCmd(SnmpEngine(),
-           CommunityData('greencore', mpModel=0),
-           UdpTransportTarget(('10.42.22.108', 161)),
-           ContextData(),
-           ObjectType(ObjectIdentity('1.3.6.1.4.1.5.0')))
-)
+# Config
 
-def TTN2time(search):
-    """
-    Convierte el formato de hora de TTN, a algo usable con datetime
-    """
-    timeTTN = datetime.strptime((search.get("time")[0:10] + " " + search.get("time")[11:19]), "%Y-%m-%d %H:%M:%S")
-    return timeTTN
+# Snmp
+snmpCommunity = 'greencore'
+snmpHost = '10.42.22.182'
+snmpOID = '1.3.6.1.4.1.5.1'
 
-# SELECT LAST("water_level") FROM "h2o_feet" WHERE "location" = 'santa_monica'
-host='localhost'
-port=8086
-user = 'root'
-password = 'root'
-dbname = 'sensores'
-dbuser = 'greencore'
-dbuser_password = 'my_secret_password'
-query = 'select LAST(Hum) FROM sensortemphum;'
-influxclient = InfluxDBClient(host, port, user, password, dbname)
-influxresult = influxclient.query(query)
+# InfluxDB
+influxHost='localhost'
+influxPort=8086
+influxUser = 'root'
+influxPassword = 'root'
+influxDbname = 'sensores'
+influxDbuser = 'greencore'
+influxDbuser_password = 'my_secret_password'
+influxQuery = 'select LAST(Hum) FROM sensortemphum;'
+
+# Fin Config
+
+influxclient = InfluxDBClient(influxHost, influxPort, influxUser, influxPassword, influxDbname)
+influxresult = influxclient.query(influxQuery)
 result = list(influxresult.get_points())
-hum = result[0]['last']
-timeTTN = datetime.strptime(result[0]['time'][0:10] + " " + result[0]['time'][11:19], "%Y-%m-%d %H:%M:%S")
+try:
+    hum = result[0]['last']
+    timeTTN = datetime.strptime(result[0]['time'][0:10] + " " + result[0]['time'][11:19], "%Y-%m-%d %H:%M:%S")
+except:
+    timeTTN = 0
+    hum = -1
+    if __debug__:
+        print("no existe en influx")
 
 # Medimos el tiempo según TTN, el tiempo de hace 5 minutos. Si no hemos recibido datos, el sensor responde "0"
 timeFail=datetime.utcnow()
 
 print('humedad')
-if (timeFail - timedelta(minutes=5) < timeTTN):
+if (timeTTN in locals()) and (timeFail - timedelta(minutes=5) < timeTTN and hum in locals() ):
     print(hum)
+    if __debug__:
+        print("TTN")
 else:
     try:
         errorIndication, errorStatus, errorIndex, varBinds = next(
            getCmd(SnmpEngine(),
-           CommunityData('greencore', mpModel=0),
-           UdpTransportTarget(('10.42.22.182', 161)),
+           CommunityData(snmpCommunity, mpModel=0),
+           UdpTransportTarget((snmpHost, 161)),
            ContextData(),
-           ObjectType(ObjectIdentity('1.3.6.1.4.1.5.0')))
+           ObjectType(ObjectIdentity(snmpOID)))
         )
         if errorIndication:
             print("Error: " + errorIndication)
@@ -58,6 +61,7 @@ else:
         else:
             snmpdata = str(varBinds[0]).split("= ")
             print(snmpdata[1])
-
+            if __debug__:
+                print("snmp")
     except:
         print("-1")
