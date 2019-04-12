@@ -8,9 +8,10 @@ El script de python ``ttn2db.py`` se encarga de leer desde TTN paquetes de MQTT,
 ## Instrucciones de instalación
 
 ```
-python3 -m "venv" venv
-venv/bin/pip3 install -r requirements.txt
-venv/bin/python3 ttn2db.py
+sudo python3 -m "venv" /opt/venv
+sudo /opt/venv/bin/pip3 install -r requirements.txt
+sudo /opt/venv/bin/python3 influxdb-init.py
+sudo /opt/venv/bin/python3 ttn2db.py
 ```
 
 ## Configuración de servicio a nivel de Systemd
