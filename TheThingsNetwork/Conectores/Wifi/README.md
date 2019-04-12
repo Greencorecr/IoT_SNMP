@@ -107,3 +107,7 @@ La siguiente guía tiene como finalidad configurar la Raspberry Pi como Access P
 	country_code=US 
 	```
 
+## Referencias
+
+- https://learn.adafruit.com/setting-up-a-raspberry-pi-as-a-wifi-access-point/install-software
+
