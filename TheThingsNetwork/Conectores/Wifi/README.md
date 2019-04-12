@@ -62,8 +62,19 @@ La siguiente guía tiene como finalidad configurar la Raspberry Pi como Access P
 	
 	**sudo apt install iptables-persistent**
 
+6. Habilitar reenvió de IP (IP forward) a nivel del kernel:
 
-6. Configurar archivo de configuración del Access Point:
+	**sudo vim /etc/sysctl.conf**
+
+	```
+	net.ipv4.ip_forward=1
+	```
+
+	Para aplicar el cambio sin tener que reiniciar:
+
+	**sudo sysctl -p**
+
+7. Configurar archivo de configuración del Access Point:
 
 	**sudo vim /etc/default/hostapd**
 	
@@ -71,7 +82,7 @@ La siguiente guía tiene como finalidad configurar la Raspberry Pi como Access P
 	DAEMON_CONF="/etc/hostapd/hostapd.conf"
 	```
 
-7. Configurar servicio de Access Point:
+8. Configurar servicio de Access Point:
 
 	**sudo vim /etc/hostapd/hostapd.conf**
 	
