@@ -110,4 +110,4 @@ La siguiente guía tiene como finalidad configurar la Raspberry Pi como Access P
 ## Referencias
 
 - https://learn.adafruit.com/setting-up-a-raspberry-pi-as-a-wifi-access-point/install-software
-
+- https://edimax.freshdesk.com/support/solutions/articles/14000032146-how-to-install-ew-7811-ac600-series-and-ew-7822uac-adapters-on-raspberry-pi
