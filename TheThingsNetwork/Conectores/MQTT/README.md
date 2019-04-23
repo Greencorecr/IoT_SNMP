@@ -12,6 +12,7 @@ sudo python3 -m "venv" /opt/venv
 sudo /opt/venv/bin/pip3 install -r requirements.txt
 sudo /opt/venv/bin/python3 influxdb-init.py
 sudo /opt/venv/bin/python3 ttn2db.py
+sudo apt install influxdb
 ```
 
 ## Configuración de servicio a nivel de Systemd
