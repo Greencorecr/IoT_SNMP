@@ -9,6 +9,4 @@ install:
   - npm install -g markdown-link-check
 script:
   - find . -name \*.md -exec markdown-link-check {} \;
-  - python3 <<< True
-    # - ( cd Conectores/SNMP/ && python3 -m unittest discover -v )
-    # - python3 Conectores/MQTT/unittest.py
+  - (cd software/ttn2db/ ; python3 -m unittest discover -v)
