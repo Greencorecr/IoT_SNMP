@@ -4,8 +4,8 @@ python:
   - "3.6"
 cache: pip
 install:
-  - pip install -r TheThingsNetwork/Conectores/SNMP/requirements.txt
-  - pip install -r TheThingsNetwork/Conectores/MQTT/requirements.txt
+  - pip install -r software/SNMP/requirements.txt
+  - pip install -r software/MQTT/requirements.txt
   - npm install -g markdown-link-check
 script:
   - markdown-link-check README.md
