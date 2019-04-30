@@ -6,7 +6,9 @@ cache: pip
 install:
   - pip install -r TheThingsNetwork/Conectores/SNMP/requirements.txt
   - pip install -r TheThingsNetwork/Conectores/MQTT/requirements.txt
+  - npm install -g markdown-link-check
 script:
+  - markdown-link-check README.md
   - python3 <<< True
     # - ( cd Conectores/SNMP/ && python3 -m unittest discover -v )
     # - python3 Conectores/MQTT/unittest.py

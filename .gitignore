@@ -1,2 +1,3 @@
 venv/
 sensores.json
+*.bin
