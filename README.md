@@ -1,7 +1,7 @@
 # IoT_SNMP [![Build Status](https://travis-ci.org/Greencorecr/IoT_SNMP.svg?branch=master)](https://travis-ci.org/Greencorecr/IoT_SNMP)
 Dispositivos con The Things Network para conectar a SNMP
 
-## [Conector con MQTT](https://github.com/Greencorecr/IoT_SNMP/tree/master/software/MQTT)
+## [Conector con MQTT](https://github.com/Greencorecr/IoT_SNMP/tree/master/software/ttn2db)
 
 Se mantiene un daemon escuchando en la plataforma de MQTT de TheThingsNetwork, escuchando mensajes de los diferentes sensores, y guardando en una base de datos de TinyDB en formato JSON, los valores decodificados que recibe, así como un timestamp del momento en el que recibe el mensaje.
 
