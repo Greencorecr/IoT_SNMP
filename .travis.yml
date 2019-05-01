@@ -8,5 +8,5 @@ install:
   - pip install -r software/ttn2db/requirements.txt
   - npm install -g markdown-link-check
 script:
-  - find . -name \*.md -exec markdown-link-check {} \;
+  - find . -name \*.md -exec markdown-link-check {} +
   - ( cd software/ttn2db/test/ ; python3 -m unittest discover -v )
