@@ -16,7 +16,7 @@ install:
   - pip install -r software/snmp2db/requirements.txt
   - npm install -g markdown-link-check
 script:
-  - sonar-scanner
+  - sonar-scanner -Dsonar.login=${SONAR_TOKEN}
   - find . -name \*.md -exec markdown-link-check {} +
   - ( cd software/ttn2db/test/ ; python3 -m unittest discover -v )
   - ( cd software/snmp2db/test/ ; python3 -m unittest discover -v )
