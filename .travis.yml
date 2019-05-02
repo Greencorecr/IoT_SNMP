@@ -7,7 +7,7 @@ python:
 cache: pip
 addons:
   sonarcloud:
-    organization: "sonarcloud_organization_key" # the key of the org you chose at step #3
+    organization: "greencorecr"
 install:
   - pip install -r software/SNMP/requirements.txt
   - pip install -r software/ttn2db/requirements.txt
