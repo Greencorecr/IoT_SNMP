@@ -16,7 +16,7 @@ install:
   - pip install -r software/snmp2db/requirements.txt
   - npm install -g markdown-link-check
 script:
-  - sonar-scanner -Dsonar.login=${SONAR_TOKEN} -Dsonar.projectKey=Greencorecr_IoT_SNMP -Dsonar.c.file.suffixes=-
+  - sonar-scanner -Dsonar.projectKey=Greencorecr_IoT_SNMP -Dsonar.c.file.suffixes=-
   - find . -name \*.md -exec markdown-link-check {} +
   - ( cd software/ttn2db/test/ ; python3 -m unittest discover -v )
   - ( cd software/snmp2db/test/ ; python3 -m unittest discover -v )
