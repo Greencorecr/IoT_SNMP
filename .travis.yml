@@ -8,6 +8,8 @@ cache: pip
 addons:
   sonarcloud:
     organization: "greencorecr"
+    token:
+      secure: ${SONAR_TOKEN}
 install:
   - pip install -r software/SNMP/requirements.txt
   - pip install -r software/ttn2db/requirements.txt
