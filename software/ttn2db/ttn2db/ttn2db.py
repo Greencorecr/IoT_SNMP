@@ -4,8 +4,8 @@ import time
 import ttn
 from influxdb import InfluxDBClient
 
-app_id = "app_id" # En Overview, Application ID
-access_key = "ttn-account-v2..." # Access Keys
+app_id = "desarrollo-otaa" # En Overview, Application ID
+access_key = "ttn-account-v2.aqs55OCvGDocNr3z81LrbGcLh4rNteJuvQOuIM-Ehzk" # Access Keys
 
 host='localhost'
 port=8086
@@ -29,23 +29,11 @@ def uplink_callback(msg, client):
   payload = msg.payload_fields
   metadata = msg.metadata
   gateways = metadata.gateways
-  gwid = gateways[0].gtw_id
   rssi = gateways[0].rssi
   snr = gateways[0].snr
   channel = gateways[0].channel
   data_rate = metadata.data_rate
   SF = find_between_r(data_rate, "SF", "BW")
-  # Debugs
-  #print('----------------------------')
-  #print(gwid)
-  #print(rssi)
-  #print(snr)
-  #print(channel)
-  #print(coding_rate)
-  #print(SF)
-  #print(msg)
-  #print(payload, metadata)
-  #print('----------------------------')
 
   if payload.tipo == 'amps':
       if __debug__:

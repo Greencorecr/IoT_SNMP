@@ -4,8 +4,6 @@ def main(host='localhost', port=8086):
     user = 'root'
     password = 'root'
     dbname = 'sensores'
-    dbuser = 'greencore'
-    dbuser_password = 'my_secret_password'
 
     client = InfluxDBClient(host, port, user, password, dbname)
 
