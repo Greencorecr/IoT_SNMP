@@ -14,19 +14,18 @@ influxDbname = 'sensores'
 influxDbuser = 'greencore'
 influxClient = InfluxDBClient(influxHost, influxPort, influxUser, influxPassword, influxDbname)
 
-field = {}
-fields = {}
+Amp = {}
 # Consulta SNMP a ESP32
 config = {
-        'caida'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.214', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'caida'},
-        'consumo_01'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'amps'},
-        'consumo_02'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'amps'},
-        'consumo_03'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.2', 'payload': 'amps'},
-        'consumo_04'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.3', 'payload': 'amps'},
-        'gotas'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.211', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'gotas'},
-        'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.210', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
-        'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.210', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
-        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.213', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'puerta'},
+        'caida'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'caida'},
+        'consumo_01'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'amps'},
+        'consumo_02'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'amps'},
+        'consumo_03'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.2', 'payload': 'amps'},
+        'consumo_04'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.3', 'payload': 'amps'},
+        'gotas'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'gotas'},
+        'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
+        'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
+        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'puerta'},
         # TODO: puerta Open
          }
 
@@ -35,8 +34,9 @@ def influx_insert(json_body):
         influxClient.write_points(json_body)
     except:
         if __debug__:
-            print("Write points: {0}".format(json_body))
             print ("Error: paquete con error")
+    if __debug__:
+        print("Write points: {0}".format(json_body))
 
 
 for c_id, c_info in config.items():
@@ -89,8 +89,6 @@ for c_id, c_info in config.items():
                 }
             ]
             influx_insert(json_body)
-        elif c_id == "humedad":
-            hum = float(snmpdata[1])
         elif c_id == "temperatura" or c_id == "humedad":
             if c_id == "humedad":
                 hum = float(snmpdata[1])
@@ -127,21 +125,26 @@ for c_id, c_info in config.items():
             ]
             influx_insert(json_body)
         elif "consumo" in c_id:
-            #if c_id in consumo_01
-            field[c_id[-1:]] = { "header": "Amps" + c_id[-1:],
-                                 "body": float(snmpdata[1]) }
-            json_body = [
-                {
-                    "measurement": "sensoramps",
-                    "tags": {
-                        "dev_id": c_id,
-                        "type": config[c_id]['payload']
-                    },
-                    "time": datetime.now().isoformat(),
-                    "fields": "fields"
-                }
-            ]
-            influx_insert(json_body)
+            if c_id in ["consumo_01", "consumo_02", "consumo_03"]:
+                Amp[c_id[-1:]] = float(snmpdata[1])
+            else:
+                json_body = [
+                    {
+                        "measurement": "sensoramps",
+                        "tags": {
+                            "dev_id": c_id,
+                            "type": config[c_id]['payload']
+                        },
+                        "time": datetime.now().isoformat(),
+                           "fields": {
+                               "Amp1": Amp["1"],
+                               "Amp2": Amp["2"],
+                               "Amp3": Amp["3"],
+                               "Amp4": float(snmpdata[1])
+                           }
+                    }
+                ]
+                influx_insert(json_body)
         else:
             raise Exception('Campo no encontrado')
 
