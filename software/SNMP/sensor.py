@@ -68,7 +68,7 @@ else:
            ObjectType(ObjectIdentity(snmpOID)))
         )
         if errorIndication:
-            print("Error: " + errorIndication)
+            print("Error: " + str(errorIndication))
         elif errorStatus:
             print('%s at %s' % (errorStatus.prettyPrint(),
                                 errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
