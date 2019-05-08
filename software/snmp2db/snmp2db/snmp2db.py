@@ -127,7 +127,7 @@ for c_id, c_info in config.items():
             ]
             influx_insert(json_body)
         elif "consumo" in c_id:
-            if c_id in consumo_01
+            #if c_id in consumo_01
             field[c_id[-1:]] = { "header": "Amps" + c_id[-1:],
                                  "body": float(snmpdata[1]) }
             json_body = [
