@@ -92,7 +92,7 @@ for c_id, c_info in config.items():
         elif c_id == "temperatura" or c_id == "humedad":
             if c_id == "humedad":
                 hum = float(snmpdata[1])
-            elif hum in locals():
+            elif hum:
                json_body = [
                    {
                        "measurement": "sensortemphum",
