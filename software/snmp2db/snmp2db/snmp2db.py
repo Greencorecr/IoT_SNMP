@@ -92,7 +92,7 @@ for c_id, c_info in config.items():
         elif c_id == "temperatura" or c_id == "humedad":
             if c_id == "humedad":
                 hum = float(snmpdata[1])
-            else:
+            elif hum in locals():
                json_body = [
                    {
                        "measurement": "sensortemphum",
@@ -127,7 +127,7 @@ for c_id, c_info in config.items():
         elif "consumo" in c_id:
             if c_id in ["consumo_01", "consumo_02", "consumo_03"]:
                 Amp[c_id[-1:]] = float(snmpdata[1])
-            else:
+            elif len(Amp) == 3:
                 json_body = [
                     {
                         "measurement": "sensoramps",
