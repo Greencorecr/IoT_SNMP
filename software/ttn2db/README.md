@@ -2,7 +2,7 @@
 
 ## Descripción
 
-El script de python ``ttn2db.py`` se encarga de leer desde TTN paquetes de MQTT, e insertarlos en una base de datos de TinyDB. Se recomienda ejecutar en conjunto con SystemD como un servicio, y es capaz de escuchar varios sensores de forma simultánea, agregando sus datos en la base de datos según el tipo de sensor.
+El script de python ``ttn2db.py`` se encarga de leer desde TTN paquetes de MQTT, e insertarlos en una base de datos de InfluxDB. Se recomienda ejecutar en conjunto con SystemD como un servicio, y es capaz de escuchar varios sensores de forma simultánea, agregando sus datos en la base de datos según el tipo de sensor.
 
 
 ## Instrucciones de instalación
@@ -23,7 +23,7 @@ sudo apt install influxdb
 
     ```
     [Unit]
-    Description= loads data from TTN and save it in a local tinydb file in json format
+    Description= loads data from TTN and save it in a local InfluxDB file in json format
     After=syslog.target
 
     [Service]

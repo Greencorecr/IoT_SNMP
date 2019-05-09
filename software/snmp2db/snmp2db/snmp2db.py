@@ -25,7 +25,7 @@ config = {
         'gotas'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'gotas'},
         'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
         'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
-        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'puerta'},
+        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'puerta'},
         # TODO: puerta Open
          }
 
