@@ -17,15 +17,15 @@ influxClient = InfluxDBClient(influxHost, influxPort, influxUser, influxPassword
 Amp = {}
 # Consulta SNMP a ESP32
 config = {
-        'caida'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'caida'},
-        'consumo_01'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'amps'},
-        'consumo_02'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'amps'},
-        'consumo_03'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.2', 'payload': 'amps'},
-        'consumo_04'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.3', 'payload': 'amps'},
-        'gotas'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'gotas'},
-        'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
-        'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
-        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'puerta'},
+        'caida'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.214', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'caida'},
+        'consumo_01'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'amps'},
+        'consumo_02'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'amps'},
+        'consumo_03'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.2', 'payload': 'amps'},
+        'consumo_04'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.3', 'payload': 'amps'},
+        'gotas'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.211', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'gotas'},
+        'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.210', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
+        'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.210', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
+        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.213', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'puerta'},
         # TODO: puerta Open
          }
 
@@ -69,7 +69,7 @@ for c_id, c_info in config.items():
                     },
                     "time": datetime.now().isoformat(),
                     "fields": {
-                        "Caida": snmpdata[1]
+                        "Caida": int(snmpdata[1])
                     }
                 }
             ]
@@ -84,7 +84,7 @@ for c_id, c_info in config.items():
                     },
                     "time": datetime.now().isoformat(),
                     "fields": {
-                        "Gotas": snmpdata[1]
+                        "Gotas": int(snmpdata[1])
                     }
                 }
             ]
@@ -118,7 +118,7 @@ for c_id, c_info in config.items():
                     },
                     "time": datetime.now().isoformat(),
                     "fields": {
-                        "Count": snmpdata[1]
+                        "Count": int(snmpdata[1])
                         # TODO: Open
                     }
                 }
