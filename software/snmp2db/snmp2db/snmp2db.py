@@ -26,7 +26,7 @@ config = {
         'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
         'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
         'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'puerta'},
-        # TODO: puerta Open
+        # TODO: puerta Count
          }
 
 def influx_insert(json_body):
@@ -118,8 +118,8 @@ for c_id, c_info in config.items():
                     },
                     "time": datetime.utcnow().isoformat(),
                     "fields": {
-                        "Count": int(snmpdata[1])
-                        # TODO: Open
+                        "Open": int(snmpdata[1])
+                        # TODO: Count
                     }
                 }
             ]
