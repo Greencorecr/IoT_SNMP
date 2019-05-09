@@ -67,7 +67,7 @@ for c_id, c_info in config.items():
                         "dev_id": c_id,
                         "type": config[c_id]['payload']
                     },
-                    "time": datetime.now().isoformat(),
+                    "time": datetime.utcnow().isoformat(),
                     "fields": {
                         "Caida": int(snmpdata[1])
                     }
@@ -82,7 +82,7 @@ for c_id, c_info in config.items():
                         "dev_id": c_id,
                         "type": config[c_id]['payload']
                     },
-                    "time": datetime.now().isoformat(),
+                    "time": datetime.utcnow().isoformat(),
                     "fields": {
                         "Gotas": int(snmpdata[1])
                     }
@@ -100,7 +100,7 @@ for c_id, c_info in config.items():
                            "dev_id": c_id,
                            "type": config[c_id]['payload']
                        },
-                       "time": datetime.now().isoformat(),
+                       "time": datetime.utcnow().isoformat(),
                        "fields": {
                            "Hum": hum,
                            "Temp": float(snmpdata[1])
@@ -116,7 +116,7 @@ for c_id, c_info in config.items():
                         "dev_id": c_id,
                         "type": config[c_id]['payload']
                     },
-                    "time": datetime.now().isoformat(),
+                    "time": datetime.utcnow().isoformat(),
                     "fields": {
                         "Count": int(snmpdata[1])
                         # TODO: Open
@@ -135,7 +135,7 @@ for c_id, c_info in config.items():
                             "dev_id": c_id,
                             "type": config[c_id]['payload']
                         },
-                        "time": datetime.now().isoformat(),
+                        "time": datetime.utcnow().isoformat(),
                            "fields": {
                                "Amp1": Amp["1"],
                                "Amp2": Amp["2"],
