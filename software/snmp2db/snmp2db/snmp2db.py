@@ -17,6 +17,7 @@ influxClient = InfluxDBClient(influxHost, influxPort, influxUser, influxPassword
 Amp = {}
 # Consulta SNMP a ESP32
 config = {
+<<<<<<< HEAD
         'caida'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.214', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'caida'},
         'consumo_01'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'amps'},
         'consumo_02'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.212', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'amps'},
@@ -26,6 +27,17 @@ config = {
         'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.210', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
         'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.210', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
         'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.213', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'puerta'},
+=======
+        'caida'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'caida'},
+        'consumo_01'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'amps'},
+        'consumo_02'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'amps'},
+        'consumo_03'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.2', 'payload': 'amps'},
+        'consumo_04'  : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.3', 'payload': 'amps'},
+        'gotas'       : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'gotas'},
+        'humedad'     : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'temphum'},
+        'temperatura' : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.0', 'payload': 'temphum'},
+        'puerta'      : {'snmpCommunity': 'greencore', 'snmpHost': '10.42.22.xx', 'snmpOID': '1.3.6.1.4.1.5.1', 'payload': 'puerta'},
+>>>>>>> cb2b646a4f4e7341a8b2634e0302414f7c28375e
         # TODO: puerta Open
          }
 

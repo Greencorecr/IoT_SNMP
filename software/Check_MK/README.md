@@ -2,7 +2,7 @@
 
 ## Descripción
 
-El script de python ``db2snmp.py``, lee de una base de datos TinyDB la cual ha sido alimentada por ``ttn2db.py``, y exporta según el valor consultado en formato de SNMP. Desde el servidor de monitoreo se debe configurar un chequeo para que consulte la información de los sensores vía SNMP, y la asocie con un servicio nuevo a monitorear.
+El script de python ``db2snmp.py``, lee de una base de datos InfluxDB la cual ha sido alimentada por ``ttn2db.py``, y exporta según el valor consultado en formato de SNMP. Desde el servidor de monitoreo se debe configurar un chequeo para que consulte la información de los sensores vía SNMP, y la asocie con un servicio nuevo a monitorear.
 
 ## Instrucciones de configuración
 
