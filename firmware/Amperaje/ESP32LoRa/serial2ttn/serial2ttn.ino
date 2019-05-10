@@ -33,10 +33,12 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 
 WiFiUDP udp;
 SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
-char* snmpAmp1 = "";
-char* snmpAmp2 = "";
-char* snmpAmp3 = "";
-char* snmpAmp4 = "";
+char* snmpAmp1 = "0.0";
+char* snmpAmp2 = "0.0";
+char* snmpAmp3 = "0.0";
+char* snmpAmp4 = "0.0";
+
+const char* prueba;
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -167,7 +169,7 @@ void do_send(osjob_t* j){
     mydata[3] = highByte(tempInteger);
     mydata[4] = lowByte(tempInteger);
     String str1 = String(sensorData[0]);
-    str1.toCharArray(snmpAmp1, str1.length());
+    str1.toCharArray(snmpAmp1, str1.length()+1);
 
     tempInteger = sensorData[1].toInt();
     mydata[5] = highByte(tempInteger);
@@ -177,7 +179,7 @@ void do_send(osjob_t* j){
     mydata[7] = highByte(tempInteger);
     mydata[8] = lowByte(tempInteger);
     String str2 = String(sensorData[1]);
-    str2.toCharArray(snmpAmp2, str2.length());
+    str2.toCharArray(snmpAmp2, str2.length()+1);
 
     tempInteger = sensorData[2].toInt();
     mydata[9] = highByte(tempInteger);
@@ -187,8 +189,7 @@ void do_send(osjob_t* j){
     mydata[11] = highByte(tempInteger);
     mydata[12] = lowByte(tempInteger);
     String str3 = String(sensorData[2]);
-    str3.toCharArray(snmpAmp3, str3.length());
-
+    str3.toCharArray(snmpAmp3, str3.length()+1);
 
     tempInteger = sensorData[3].toInt();
     mydata[13] = highByte(tempInteger);
@@ -198,9 +199,7 @@ void do_send(osjob_t* j){
     mydata[15] = highByte(tempInteger);
     mydata[16] = lowByte(tempInteger);
     String str4 = String(sensorData[3]);
-    str4.toCharArray(snmpAmp4, str4.length());
-
-
+    str4.toCharArray(snmpAmp4, str4.length()+1);
 
     unsigned long currentMillis = millis();
     
@@ -269,6 +268,14 @@ void setup() {
     MDNS.begin(hostname);
     MDNS.enableWorkstation();
     MDNS.addService("snmp", "tcp", 161);
+    snmpAmp1 = (char*)malloc(6);
+    memset(snmpAmp1, 0, 6);
+    snmpAmp2 = (char*)malloc(6);
+    memset(snmpAmp2, 0, 6);
+    snmpAmp3 = (char*)malloc(6);
+    memset(snmpAmp3, 0, 6);
+    snmpAmp4 = (char*)malloc(6);
+    memset(snmpAmp4, 0, 6);
     snmp.setUDP(&udp);
     snmp.begin();
     snmp.addStringHandler(".1.3.6.1.4.1.5.0", &snmpAmp1);

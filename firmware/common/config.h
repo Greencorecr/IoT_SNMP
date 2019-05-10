@@ -2,12 +2,12 @@
 #define OTAA
 
 // Comment the next line if you plan NOT to use IoTAppStory's service
-#define USE_IAS
+//#define USE_IAS
 
 #ifdef OTAA
 // Valores para autenticación OTAA
 static const u1_t PROGMEM DEVEUI[8]={ }; // Device EUI, hex, lsb
-static const u1_t PROGMEM APPEUI[8]={ }; // Application EUI, hex, lsb
+static const u1_t PROGMEM APPEUI[8]={  }; // Application EUI, hex, lsb
 static const u1_t PROGMEM APPKEY[16] = { }; // App Key, hex, msb
 
 void os_getDevEui (u1_t* buf) { memcpy_P(buf, DEVEUI, 8);}
@@ -25,7 +25,7 @@ void os_getDevKey (u1_t* buf) { }
 #endif
 
 const char* ssid       = "AP";
-const char* password   = "pass";
+const char* password   = "Password";
 const char* hostname   = "hostname";
 
 // Schedule TX every this many seconds (might become longer due to duty
