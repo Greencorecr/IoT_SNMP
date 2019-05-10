@@ -2,7 +2,7 @@
 #define OTAA
 
 // Comment the next line if you plan NOT to use IoTAppStory's service
-//#define USE_IAS
+#define USE_IAS
 
 #ifdef OTAA
 // Valores para autenticación OTAA
