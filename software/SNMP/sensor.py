@@ -19,7 +19,7 @@ from pysnmp.hlapi import *
 
 # Consulta SNMP a ESP32
 snmpCommunity = 'greencore'
-snmpHost = '10.42.22.182'
+snmpHost = '10.42.22.xx'
 snmpOID = '1.3.6.1.4.1.5.1'
 
 # Respuesta SNMP que construimos
@@ -44,7 +44,7 @@ try:
     sensorData = result[0]['last']
     timeTTN = datetime.strptime(result[0]['time'][0:10] + " " + result[0]['time'][11:19], "%Y-%m-%d %H:%M:%S")
 except:
-    timeTTN = 0
+    timeTTN = datetime(2019, 1, 1, 0, 0)
     sensorData = -1
     if __debug__:
         print("no existe en influx")
@@ -54,28 +54,9 @@ timeFail=datetime.utcnow()
 
 # Se inicia la creación de la respuesta de SNMP
 print(snmpHeader)
-if (timeTTN in locals()) and (timeFail - timedelta(minutes=5) < timeTTN and sensorData in locals() ):
+if (timeFail - timedelta(minutes=5) < timeTTN ):
     print(sensorData)
     if __debug__:
         print("TTN")
 else:
-    try:
-        errorIndication, errorStatus, errorIndex, varBinds = next(
-           getCmd(SnmpEngine(),
-           CommunityData(snmpCommunity, mpModel=0),
-           UdpTransportTarget((snmpHost, 161)),
-           ContextData(),
-           ObjectType(ObjectIdentity(snmpOID)))
-        )
-        if errorIndication:
-            print("Error: " + str(errorIndication))
-        elif errorStatus:
-            print('%s at %s' % (errorStatus.prettyPrint(),
-                                errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
-        else:
-            snmpdata = str(varBinds[0]).split("= ")
-            print(snmpdata[1])
-            if __debug__:
-                print("snmp")
-    except:
-        print("-1")
+    print("-1")
