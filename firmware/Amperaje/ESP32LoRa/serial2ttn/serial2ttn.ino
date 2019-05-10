@@ -33,10 +33,10 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, 
 
 WiFiUDP udp;
 SNMPAgent snmp = SNMPAgent("greencore");  // Starts an SMMPAgent instance with the community string 'public'
-float snmpAmp1 = 0;
-float snmpAmp2 = 0;
-float snmpAmp3 = 0;
-float snmpAmp4 = 0;
+char* snmpAmp1 = "";
+char* snmpAmp2 = "";
+char* snmpAmp3 = "";
+char* snmpAmp4 = "";
 
 unsigned long previousMillis = 0;
 const long interval = 300000;
@@ -166,7 +166,8 @@ void do_send(osjob_t* j){
     tempInteger = int(tempFloat);
     mydata[3] = highByte(tempInteger);
     mydata[4] = lowByte(tempInteger);
-    snmpAmp1 = sensorData[0].toFloat();
+    String str1 = String(sensorData[0]);
+    str1.toCharArray(snmpAmp1, str1.length());
 
     tempInteger = sensorData[1].toInt();
     mydata[5] = highByte(tempInteger);
@@ -175,7 +176,8 @@ void do_send(osjob_t* j){
     tempInteger = int(tempFloat);
     mydata[7] = highByte(tempInteger);
     mydata[8] = lowByte(tempInteger);
-    snmpAmp2 = sensorData[1].toFloat();
+    String str2 = String(sensorData[1]);
+    str2.toCharArray(snmpAmp2, str2.length());
 
     tempInteger = sensorData[2].toInt();
     mydata[9] = highByte(tempInteger);
@@ -184,7 +186,8 @@ void do_send(osjob_t* j){
     tempInteger = int(tempFloat);
     mydata[11] = highByte(tempInteger);
     mydata[12] = lowByte(tempInteger);
-    snmpAmp3 = sensorData[2].toFloat();
+    String str3 = String(sensorData[2]);
+    str3.toCharArray(snmpAmp3, str3.length());
 
 
     tempInteger = sensorData[3].toInt();
@@ -194,7 +197,8 @@ void do_send(osjob_t* j){
     tempInteger = int(tempFloat);
     mydata[15] = highByte(tempInteger);
     mydata[16] = lowByte(tempInteger);
-    snmpAmp4 = sensorData[3].toFloat();
+    String str4 = String(sensorData[3]);
+    str4.toCharArray(snmpAmp4, str4.length());
 
 
 
@@ -267,10 +271,10 @@ void setup() {
     MDNS.addService("snmp", "tcp", 161);
     snmp.setUDP(&udp);
     snmp.begin();
-    snmp.addFloatHandler(".1.3.6.1.4.1.5.0", &snmpAmp1);
-    snmp.addFloatHandler(".1.3.6.1.4.1.5.1", &snmpAmp2);
-    snmp.addFloatHandler(".1.3.6.1.4.1.5.2", &snmpAmp3);
-    snmp.addFloatHandler(".1.3.6.1.4.1.5.3", &snmpAmp4);
+    snmp.addStringHandler(".1.3.6.1.4.1.5.0", &snmpAmp1);
+    snmp.addStringHandler(".1.3.6.1.4.1.5.1", &snmpAmp2);
+    snmp.addStringHandler(".1.3.6.1.4.1.5.2", &snmpAmp3);
+    snmp.addStringHandler(".1.3.6.1.4.1.5.3", &snmpAmp4);
 
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println(WiFi.localIP());
