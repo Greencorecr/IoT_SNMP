@@ -15,6 +15,12 @@
 #include <ESPmDNS.h>
 #include <WiFiUdp.h>
 #include <Arduino_SNMP.h>
+#include <EasyButton.h>
+
+
+#define BUTTON_PIN 34
+EasyButton sensorPuerta(BUTTON_PIN);
+
 
 #include "config.h"
 
@@ -41,28 +47,11 @@ uint8_t mydata[] = "0000";
 
 static osjob_t sendjob;
 
-#define DoorPin 34
-int doorState = 0;
-int lastDoorState = 0;
-bool doorOpen = 0;
-//int reading = LOW;
-unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-const unsigned long debounceDelay = 100;
-
-int doorCount, lastDoorCount = 0;
-
-struct Trigger {
-    const uint8_t PIN;
-    uint32_t numberKeyPresses;
-    bool pressed;
-};
-
-Trigger puerta1 = {34, 0, false};
-
-void IRAM_ATTR isr() {
-    puerta1.numberKeyPresses += 1;
-//    puerta1.pressed = !puerta1.pressed;
-    puerta1.pressed = true;
+void onPressedForDuration() {
+  snmpDoorCount++;
+  Serial.print("count: "); Serial.print(snmpDoorCount);
+  Serial.print("open: "); Serial.print(sensorPuerta.isPressed());
+  Serial.println("Button has been pressed!");
 
 }
 
@@ -162,13 +151,13 @@ void onEvent (ev_t ev) {
 
 
 void do_send(osjob_t* j){
-  if (doorOpen) {
+  if (sensorPuerta.isPressed()) {
     mydata[1] = 0x1;
   } else {
     mydata[1] = 0x0;
   }
-    mydata[2] = lowByte(doorCount);
-    mydata[3] = highByte(doorCount);
+//    mydata[2] = lowByte(doorCount);
+//    mydata[3] = highByte(doorCount);
     
     unsigned long currentMillis = millis();
 
@@ -193,9 +182,8 @@ void setup() {
     #else
     Serial.begin(115200);
     #endif
-//    pinMode(DoorPin, INPUT_PULLUP);
-    pinMode(puerta1.PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(puerta1.PIN), isr, CHANGE);
+    sensorPuerta.begin();
+    sensorPuerta.onPressedFor(200, onPressedForDuration);
     Serial.println(F("Starting"));
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
@@ -237,44 +225,13 @@ void loop() {
   IAS.loop();
   #endif
   os_runloop_once();
-  snmpDoorCount = doorCount;
   snmp.loop();
+  sensorPuerta.read();
   
-  if (puerta1.numberKeyPresses != lastDoorState) {
-    // reset the debouncing timer
-    lastDebounceTime = millis();
-  }
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (puerta1.pressed != doorState) {
-      doorState = puerta1.pressed;
-      doorCount += 1;
-      puerta1.pressed = false;
-    }
-  }
 
- // Serial.print("puerta.pressed");
- // Serial.println(puerta1.pressed);
-//  Serial.print("digitalRead");
-//  Serial.println(digitalRead(34));
-
-   lastDoorState = puerta1.numberKeyPresses;
-   if (puerta1.pressed == 1) { 
-      doorOpen = true;
-      snmpDoorOpen = 1;
-   } else { 
-      doorOpen = false;
-      snmpDoorOpen = 0;
-   }
-
-  if (millis() - lastDisplayRefresh > atoi(refreshDisplay)) {
-  
-    if (doorCount != lastDoorCount) {
-      logo();
-      muestraDatos(doorCount);
-      lastDisplayRefresh = millis();
-      lastDoorCount = doorCount;
-    } 
-  }
+//      logo();
+//      muestraDatos(doorCount);
+   
 
 }
