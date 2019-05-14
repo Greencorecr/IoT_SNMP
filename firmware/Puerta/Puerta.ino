@@ -19,7 +19,7 @@
 
 
 #define BUTTON_PIN 34
-EasyButton sensorPuerta(BUTTON_PIN);
+EasyButton sensorPuerta(BUTTON_PIN, false); // invert=false
 
 
 #include "config.h"
@@ -49,10 +49,9 @@ static osjob_t sendjob;
 
 void onPressedForDuration() {
   snmpDoorCount++;
-  Serial.print("count: "); Serial.print(snmpDoorCount);
-  Serial.print("open: "); Serial.print(sensorPuerta.isPressed());
-  Serial.println("Button has been pressed!");
-
+  snmpDoorOpen = !sensorPuerta.isPressed();
+  logo();
+  muestraDatos(snmpDoorCount);
 }
 
 void logo(){
@@ -151,13 +150,13 @@ void onEvent (ev_t ev) {
 
 
 void do_send(osjob_t* j){
-  if (sensorPuerta.isPressed()) {
+  if (snmpDoorOpen == 1) {
     mydata[1] = 0x1;
   } else {
     mydata[1] = 0x0;
   }
-//    mydata[2] = lowByte(doorCount);
-//    mydata[3] = highByte(doorCount);
+    mydata[2] = lowByte(snmpDoorCount);
+    mydata[3] = highByte(snmpDoorCount);
     
     unsigned long currentMillis = millis();
 
@@ -225,13 +224,15 @@ void loop() {
   IAS.loop();
   #endif
   os_runloop_once();
-  snmp.loop();
   sensorPuerta.read();
-  
+  if (sensorPuerta.wasReleased()) {
+    snmpDoorOpen = !sensorPuerta.isPressed();
+  }
+  snmp.loop();
+//  if (sensorPuerta.changed()) {
+//  }
 
 
-//      logo();
-//      muestraDatos(doorCount);
    
 
 }
