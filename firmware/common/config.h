@@ -27,6 +27,12 @@ void os_getDevKey (u1_t* buf) { }
 const char* ssid       = "AP";
 const char* password   = "Password";
 const char* hostname   = "hostname";
+IPAddress local_IP(10, 42, 20, xx);
+IPAddress gateway(10, 42, 20, xx);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress primaryDNS(8, 8, 8, 8);
+IPAddress secondaryDNS(8, 8, 4, 4);
+
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).

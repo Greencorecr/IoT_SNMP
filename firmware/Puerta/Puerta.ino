@@ -17,10 +17,8 @@
 #include <Arduino_SNMP.h>
 #include <EasyButton.h>
 
-
 #define BUTTON_PIN 34
 EasyButton sensorPuerta(BUTTON_PIN, false); // invert=false
-
 
 #include "config.h"
 
@@ -82,7 +80,6 @@ void(* resetFunc) (void) = 0; //declare reset function @ address 0
 void onEvent (ev_t ev) {
     Serial.print(os_getTime());
     Serial.print(": ");
-    int contador = 0;
     switch(ev) {
         case EV_SCAN_TIMEOUT:
             Serial.println(F("EV_SCAN_TIMEOUT"));
@@ -184,6 +181,7 @@ void setup() {
     sensorPuerta.begin();
     sensorPuerta.onPressedFor(200, onPressedForDuration);
     Serial.println(F("Starting"));
+    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
@@ -229,10 +227,4 @@ void loop() {
     snmpDoorOpen = !sensorPuerta.isPressed();
   }
   snmp.loop();
-//  if (sensorPuerta.changed()) {
-//  }
-
-
-   
-
 }
