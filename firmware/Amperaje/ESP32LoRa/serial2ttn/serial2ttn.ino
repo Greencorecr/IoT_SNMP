@@ -263,6 +263,7 @@ void setup() {
     #endif
     Serial2.begin(115200); // Desde Arduino-Nano
     Serial.println(F("Starting"));
+    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);

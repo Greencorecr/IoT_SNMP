@@ -192,7 +192,7 @@ void setup() {
     pinMode(goteo1.PIN, INPUT_PULLUP);
     attachInterrupt(goteo1.PIN, isr, FALLING);
     Serial.println(F("Starting"));
-
+    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);

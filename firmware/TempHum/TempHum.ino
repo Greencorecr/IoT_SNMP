@@ -272,6 +272,7 @@ void setup() {
     // Signal end of setup() to tasks
     tasksEnabled = true;
     Serial.println(F("Starting"));
+    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
@@ -287,8 +288,13 @@ void setup() {
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
 
-    #ifndef OTAA
-    LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
+    #ifndef OTAA    
+    uint8_t appskey[sizeof(APPSKEY)];
+    uint8_t nwkskey[sizeof(NWKSKEY)];
+    memcpy_P(appskey, APPSKEY, sizeof(APPSKEY));
+    memcpy_P(nwkskey, NWKSKEY, sizeof(NWKSKEY));
+    LMIC_setSession (0x1, DEVADDR, nwkskey, appskey);
+//    LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
     #endif
 
     #ifdef CFG_us915

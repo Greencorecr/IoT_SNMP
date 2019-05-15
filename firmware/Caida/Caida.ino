@@ -207,6 +207,7 @@ void setup() {
     Serial.begin(115200);
     #endif
     Serial.println(F("Starting"));
+    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.setHostname(hostname);
     WiFi.begin(ssid, password);
     MDNS.begin(hostname);
