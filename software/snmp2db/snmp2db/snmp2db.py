@@ -59,7 +59,7 @@ for c_id, c_info in config.items():
         snmpdata = str(varBinds[0]).split("= ")
         if __debug__:
             print(snmpdata[1])
-        if c_id == "caida":
+        if c_info['payload'] == "caida":
             json_body = [
                 {
                     "measurement": "sensorcaida",
@@ -74,7 +74,7 @@ for c_id, c_info in config.items():
                 }
             ]
             influx_insert(json_body)
-        elif c_id == "gotas":
+        elif c_info['payload'] == "gotas":
             json_body = [
                 {
                     "measurement": "sensorgotas",
@@ -89,8 +89,8 @@ for c_id, c_info in config.items():
                 }
             ]
             influx_insert(json_body)
-        elif c_id == "temperatura" or c_id == "humedad":
-            if c_id == "humedad":
+        elif c_info['payload'] == "temperatura" or c_info['payload'] == "humedad":
+            if c_info['payload'] == "humedad":
                 hum = float(snmpdata[1])
             elif hum:
                json_body = [
@@ -108,7 +108,7 @@ for c_id, c_info in config.items():
                    }
                ]
                influx_insert(json_body)
-        elif c_id == "puerta":
+        elif c_info['payload'] == "puerta":
             json_body = [
                 {
                     "measurement": "sensorpuerta",
@@ -126,7 +126,7 @@ for c_id, c_info in config.items():
             influx_insert(json_body)
         elif "consumo" in c_id:
             if c_id in ["consumo_01", "consumo_02", "consumo_03"]:
-                Amp[c_id[-1:]] = float(snmpdata[1])
+                Amp[c_id[-1:]] = float(snmpdata[1]) / 100
             elif len(Amp) == 3:
                 json_body = [
                     {
@@ -140,7 +140,7 @@ for c_id, c_info in config.items():
                                "Amp1": Amp["1"],
                                "Amp2": Amp["2"],
                                "Amp3": Amp["3"],
-                               "Amp4": float(snmpdata[1])
+                               "Amp4": float(snmpdata[1]) / 100
                            }
                     }
                 ]
